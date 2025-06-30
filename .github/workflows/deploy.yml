@@ -1,0 +1,40 @@
+# GitHub Actionsワークフローの名前
+name: Deploy to GitHub Pages
+
+# ワークフローが実行されるタイミングを指定
+# mainブランチにプッシュされた時に実行
+on:
+  push:
+    branches:
+      - main
+
+# 実行されるジョブを定義
+jobs:
+  deploy:
+    # ジョブを実行する仮想環境の種類
+    runs-on: ubuntu-latest
+    
+    # ジョブのステップを定義
+    steps:
+      # 1. リポジトリのコードをチェックアウトする
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. HTMLファイル内のAPIキープレースホルダーを、GitHub Secretsに保存した実際のキーに置き換える
+      - name: Replace API key
+        run: |
+          # sedコマンドを使って、index.html内の'__GEMINI_API_KEY__'という文字列を、
+          # GitHubのSecretsに登録したGEMINI_API_KEYの値で置き換える
+          sed -i 's|__GEMINI_API_KEY__|${{ secrets.GEMINI_API_KEY }}|g' index.html
+        # env: このステップで環境変数としてGitHub Secretを読み込む
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+
+      # 3. 変更したファイルをGitHub Pagesにデプロイする
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          # デプロイに使用するGitHubトークン
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          # デプロイするフォルダ（リポジトリのルート）
+          publish_dir: .
