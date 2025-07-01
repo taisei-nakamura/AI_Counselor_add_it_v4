@@ -229,8 +229,8 @@
 - 不安や悩み: ${userWorry}`;
             
             try {
-                // APIキーをプレースホルダー（仮の目印）に置き換えます
-                const apiKey = "__GEMINI_API_KEY__";
+                // ご指定のAPIキーを直接コードに設定します
+                const apiKey = "AIzaSyDj_PL3tB3oXQTWWSHOXBvlYl2NfNLggmE";
                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
                 const payload = { contents: [{ role: "user", parts: [{ text: prompt }] }] };
                 const response = await fetch(apiUrl, {
