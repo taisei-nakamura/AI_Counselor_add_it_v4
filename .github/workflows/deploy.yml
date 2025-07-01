@@ -11,6 +11,10 @@ on:
 # 実行されるジョブを定義
 jobs:
   deploy:
+    # このジョブが使用するデプロイ環境を指定
+    # これにより、この環境専用のシークレット（環境変数）を利用できます
+    environment: production
+    
     # ジョブを実行する仮想環境の種類
     runs-on: ubuntu-latest
     
@@ -20,11 +24,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2. HTMLファイル内のAPIキープレースホルダーを、GitHub Secretsに保存した実際のキーに置き換える
+      # 2. HTMLファイル内のAPIキープレースホルダーを、環境に設定したシークレットで置き換える
       - name: Replace API key
         run: |
           # sedコマンドを使って、index.html内の'__GEMINI_API_KEY__'という文字列を、
-          # GitHubのSecretsに登録したGEMINI_API_KEYの値で置き換える
+          # GitHubの環境シークレットに登録したGEMINI_API_KEYの値で置き換える
           sed -i 's|__GEMINI_API_KEY__|${{ secrets.GEMINI_API_KEY }}|g' index.html
         # env: このステップで環境変数としてGitHub Secretを読み込む
         env:
