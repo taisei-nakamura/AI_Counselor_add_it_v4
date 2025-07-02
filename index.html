@@ -104,7 +104,8 @@
         const shareButton = document.getElementById('share-button');
         const copyNotification = document.getElementById('copy-notification');
 
-        let userName = '';
+        // ブラウザのlocalStorageから名前を読み込む（なければ空文字）
+        let userName = localStorage.getItem('counselingUserName') || '';
         let userWorry = '';
         let state = 'ASK_NAME_AND_WORRY';
 
@@ -194,6 +195,11 @@
             userName = nameInput.value.trim();
             userWorry = worryInput.value.trim();
 
+            // 入力された名前をブラウザに保存する
+            if (userName) {
+                localStorage.setItem('counselingUserName', userName);
+            }
+
             if (!userWorry) {
                 worryInput.focus();
                 worryInput.classList.add('border-red-500', 'ring-red-500');
@@ -264,44 +270,22 @@
         }
         
         function processAIResponse(text) {
-             loadingIndicator.classList.add('hidden');
+            loadingIndicator.classList.add('hidden');
             if (text.startsWith('[OFF_TOPIC]')) {
                 const offTopicMessage = text.substring('[OFF_TOPIC]'.length).trim().replace(/\n/g, '<br>');
                 addMessageToChat(offTopicMessage, 'ai');
-                state = 'ASK_NAME_AND_WORRY';
-                inputArea.classList.remove('hidden');
-                renderInputForm();
             } else {
                 addMessageToChat(text.replace(/\n/g, '<br>'), 'ai');
-                state = 'ADVICE_GIVEN';
-                inputArea.innerHTML = `<p class="text-center text-gray-500">アドバイスをお伝えしました。3分後にまたお声がけします。</p>`;
-                inputArea.classList.remove('hidden');
-                setTimeout(showFollowUpMessage, 3 * 60 * 1000);
             }
-        }
-
-        function showFollowUpMessage() {
-            state = 'FOLLOW_UP';
-            const followUpMessage = `${userName ? userName + 'さん、' : ''}その後、いかがお過ごしでしょうか？<br><br>先ほどのアドバイスは、何か少しでもお気持ちを楽にするヒントになりましたでしょうか。もしよろしければ、簡単なご感想をお聞かせください。`;
-            addMessageToChat(followUpMessage, 'ai');
-            inputArea.innerHTML = `
-                <form id="followup-form">
-                    <textarea id="feedback" name="feedback" rows="3" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="感想を自由にお書きください..."></textarea>
-                    <button type="submit" class="mt-2 w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-md transition duration-300">
-                        感想を送る
-                    </button>
-                </form>
-            `;
-            document.getElementById('followup-form').addEventListener('submit', (e) => {
-                e.preventDefault();
-                const feedback = document.getElementById('feedback').value;
-                if(feedback.trim()) {
-                    addMessageToChat(feedback, 'user');
-                }
-                addMessageToChat("お気持ちを教えていただき、ありがとうございます。あなたの心が少しでも軽くなることを願っています。", 'ai');
-                inputArea.innerHTML = `<p class="text-center text-gray-500">ご利用ありがとうございました。</p>`;
-            });
-            document.getElementById('feedback').focus();
+            // 状態をリセットし、入力フォームを再度表示する
+            state = 'ASK_NAME_AND_WORRY';
+            inputArea.classList.remove('hidden');
+            renderInputForm();
+            // 新しい相談のためにテキストエリアを空にする
+            const worryTextarea = document.getElementById('worry');
+            if(worryTextarea) {
+                worryTextarea.value = '';
+            }
         }
 
         function addMessageToChat(message, sender) {
