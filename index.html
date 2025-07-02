@@ -230,7 +230,7 @@
             
             try {
                 // ご指定のAPIキーを直接コードに設定します
-                const apiKey = "AIzaSyDj_PL3tB3oXQTWWSHOXBvlYl2NfNLggmE";
+                const apiKey = ${{ secrets.GEMINI_API_KEY }};
                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
                 const payload = { contents: [{ role: "user", parts: [{ text: prompt }] }] };
                 const response = await fetch(apiUrl, {
