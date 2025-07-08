@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>心の相談室 - あなたの悩みに寄り添うオンラインカウンセリングサイト</title>
+    <title>心の相談室</title>
     <meta name="description" content="AIカウンセラーがあなたの不安や悩みに寄り添い、専門家の知見に基づいたアドバイスを提供します。匿名で安心して相談できる心の相談室です。">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&family=Noto+Sans+KR:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
@@ -72,7 +72,7 @@
     <div class="w-full max-w-2xl h-[90vh] sm:h-[85vh] bg-white rounded-2xl shadow-xl flex flex-col">
         <header class="bg-blue-500 text-white p-4 rounded-t-2xl shadow-md flex justify-between items-center">
             <div class="w-8"></div> <!-- Spacer -->
-            <h1 class="text-xl font-bold text-center">心の相談室</h1>
+            <h1 id="header-title" class="text-xl font-bold text-center">心の相談室</h1>
             <button id="settings-button" class="p-2 rounded-full hover:bg-blue-600 transition-colors" title="設定">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-settings"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
             </button>
@@ -88,7 +88,7 @@
                     <div class="animate-pulse rounded-full bg-blue-400 h-2 w-2"></div>
                     <div class="animate-pulse rounded-full bg-blue-400 h-2 w-2" style="animation-delay: 0.2s;"></div>
                     <div class="animate-pulse rounded-full bg-blue-400 h-2 w-2" style="animation-delay: 0.4s;"></div>
-                    <p class="text-xs text-gray-500 ml-2">AIが考えています...</p>
+                    <p id="loading-text" class="text-xs text-gray-500 ml-2">AIが考えています...</p>
                 </div>
             </div>
             <form id="chat-form" class="flex items-center space-x-2">
@@ -103,11 +103,11 @@
     <!-- Settings Modal -->
     <div id="settings-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 opacity-0 transform scale-95 pointer-events-none">
         <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
-            <h2 class="text-xl font-bold mb-4 text-gray-800">設定</h2>
+            <h2 id="settings-title" class="text-xl font-bold mb-4 text-gray-800">設定</h2>
             
             <div class="space-y-6">
                 <div>
-                    <h3 class="text-lg font-semibold mb-2 text-gray-700">言語 (Language)</h3>
+                    <h3 id="settings-lang-label" class="text-lg font-semibold mb-2 text-gray-700">言語 (Language)</h3>
                     <div id="language-options" class="grid grid-cols-2 gap-2">
                         <button data-lang="Japanese" class="setting-option p-3 rounded-lg border">日本語</button>
                         <button data-lang="English" class="setting-option p-3 rounded-lg border">English</button>
@@ -117,7 +117,7 @@
                 </div>
 
                 <div id="style-section" class="hidden">
-                    <h3 class="text-lg font-semibold mb-2 text-gray-700">話し方</h3>
+                    <h3 id="settings-style-label" class="text-lg font-semibold mb-2 text-gray-700">話し方</h3>
                     <select id="style-select" class="w-full p-3 rounded-lg border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-400">
                         <!-- Options will be populated by JavaScript -->
                     </select>
@@ -129,8 +129,8 @@
     </div>
 
     <footer class="w-full max-w-2xl text-center text-xs text-gray-400 mt-4 px-4">
-        <p>&copy; 2024 心の相談室. All Rights Reserved.</p>
-        <p class="mt-1">このサイトはAIによるアドバイスを提供します。専門的な医療やカウンセリングの代替となるものではありません。深刻な悩みをお持ちの場合は、専門の医療機関にご相談ください。</p>
+        <p id="footer-copyright">&copy; 2024 心の相談室. All Rights Reserved.</p>
+        <p id="footer-disclaimer" class="mt-1">このサイトはAIによるアドバイスを提供します。専門的な医療やカウンセリングの代替となるものではありません。深刻な悩みをお持ちの場合は、専門の医療機関にご相談ください。</p>
     </footer>
 
     <script>
@@ -150,17 +150,70 @@
         let userName = localStorage.getItem('counselingUserName') || '';
         let language = localStorage.getItem('counselingLanguage') || 'Japanese';
         let style = localStorage.getItem('counselingStyle') || 'Keigo';
+        // Temporary state for settings modal
+        let tempLanguage = language;
+        let tempStyle = style;
 
-        const prefectures = [
-            '北海道', '青森県', '岩手県', '宮城県', '秋田県', '山形県', '福島県', '茨城県', '栃木県', '群馬県', '埼玉県', '千葉県', '東京都', '神奈川県', 
-            '新潟県', '富山県', '石川県', '福井県', '山梨県', '長野県', '岐阜県', '静岡県', '愛知県', '三重県', '滋賀県', '京都府', '大阪府', '兵庫県', 
-            '奈良県', '和歌山県', '鳥取県', '島根県', '岡山県', '広島県', '山口県', '徳島県', '香川県', '愛媛県', '高知県', '福岡県', '佐賀県', '長崎県', 
-            '熊本県', '大分県', '宮崎県', '鹿児島県', '沖縄県'
-        ];
+        const dialects = ['関西弁', '鹿児島弁'];
+
+        // --- UI Text Translations ---
+        const uiStrings = {
+            Japanese: {
+                pageTitle: "心の相談室 - あなたの悩みに寄り添うオンラインカウンセリングサイト",
+                headerTitle: "心の相談室",
+                inputPlaceholder: "お悩みや気持ちをどうぞ...",
+                loadingText: "AIが考えています...",
+                settingsTitle: "設定",
+                settingsLangLabel: "言語",
+                settingsStyleLabel: "話し方",
+                settingsCloseButton: "閉じる",
+                footerCopyright: "&copy; 2024 心の相談室. All Rights Reserved.",
+                footerDisclaimer: "このサイトはAIによるアドバイスを提供します。専門的な医療やカウンセリングの代替となるものではありません。深刻な悩みをお持ちの場合は、専門の医療機関にご相談ください。",
+                styleKeigo: "敬語",
+                styleTameguchi: "ため口",
+                styleDialectGroup: "方言"
+            },
+            English: {
+                pageTitle: "Counseling Room - Online counseling site that listens to your worries",
+                headerTitle: "Counseling Room",
+                inputPlaceholder: "Please share your worries and feelings...",
+                loadingText: "AI is thinking...",
+                settingsTitle: "Settings",
+                settingsLangLabel: "Language",
+                settingsStyleLabel: "Style",
+                settingsCloseButton: "Close",
+                footerCopyright: "&copy; 2024 Counseling Room. All Rights Reserved.",
+                footerDisclaimer: "This site provides advice by AI. It is not a substitute for professional medical care or counseling. If you have serious concerns, please consult a medical institution."
+            },
+            Korean: {
+                pageTitle: "마음 상담실 - 당신의 고민에 귀 기울이는 온라인 상담 사이트",
+                headerTitle: "마음 상담실",
+                inputPlaceholder: "고민이나 기분을 말씀해주세요...",
+                loadingText: "AI가 생각 중입니다...",
+                settingsTitle: "설정",
+                settingsLangLabel: "언어",
+                settingsStyleLabel: "말투",
+                settingsCloseButton: "닫기",
+                footerCopyright: "&copy; 2024 마음 상담실. All Rights Reserved.",
+                footerDisclaimer: "이 사이트는 AI에 의한 조언을 제공합니다. 전문적인 의료나 상담을 대체하는 것이 아닙니다. 심각한 고민이 있으신 분은 전문 의료기관에 상담해주세요."
+            },
+            Chinese: {
+                pageTitle: "心理咨询室 - 倾听您烦恼的在线咨询网站",
+                headerTitle: "心理咨询室",
+                inputPlaceholder: "请告诉我您的烦恼和感受...",
+                loadingText: "AI正在思考...",
+                settingsTitle: "设置",
+                settingsLangLabel: "语言",
+                settingsStyleLabel: "说话方式",
+                settingsCloseButton: "关闭",
+                footerCopyright: "&copy; 2024 心理咨询室. All Rights Reserved.",
+                footerDisclaimer: "本网站提供AI建议。它不能替代专业的医疗或咨询。如果您有严重的疑虑，请咨询医疗机构。"
+            }
+        };
 
         // --- Initialization ---
         window.onload = function() {
-            document.documentElement.lang = language.split('-')[0].toLowerCase();
+            applyTranslations();
             populateStyleDropdown();
             updateSettingsUI();
             showInitialMessage();
@@ -168,30 +221,39 @@
 
         // --- Event Listeners ---
         settingsButton.addEventListener('click', () => {
+            // Reset temp state when opening modal
+            tempLanguage = language;
+            tempStyle = style;
+            updateSettingsUI(); // Ensure UI is up-to-date before showing
             settingsModal.classList.remove('opacity-0', 'scale-95', 'pointer-events-none');
         });
 
         closeSettingsButton.addEventListener('click', () => {
             settingsModal.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
-        });
-
-        languageOptions.addEventListener('click', (e) => {
-            const selectedLang = e.target.dataset.lang;
-            if (e.target.tagName === 'BUTTON' && selectedLang && selectedLang !== language) {
-                localStorage.setItem('counselingLanguage', selectedLang);
-                // When switching to Japanese, default to Keigo.
-                // When switching away, style is irrelevant, but we can set a default.
-                const newStyle = selectedLang === 'Japanese' ? 'Keigo' : 'Default';
-                localStorage.setItem('counselingStyle', newStyle);
+            // Check if settings have changed
+            if (tempLanguage !== language || tempStyle !== style) {
+                localStorage.setItem('counselingLanguage', tempLanguage);
+                localStorage.setItem('counselingStyle', tempStyle);
                 location.reload();
             }
         });
 
+        languageOptions.addEventListener('click', (e) => {
+            if (e.target.tagName === 'BUTTON' && e.target.dataset.lang) {
+                tempLanguage = e.target.dataset.lang;
+                if (tempLanguage !== 'Japanese') {
+                    tempStyle = 'Default';
+                } else {
+                    tempStyle = 'Keigo';
+                }
+                updateSettingsUI();
+            }
+        });
+
         styleSelect.addEventListener('change', (e) => {
-            const newStyle = e.target.value;
-            if (newStyle && newStyle !== style) {
-                localStorage.setItem('counselingStyle', newStyle);
-                location.reload();
+            if (e.target.value) {
+                tempStyle = e.target.value;
+                updateSettingsUI();
             }
         });
 
@@ -217,18 +279,16 @@
                     Tameguchi: `${userName ? userName + '、' : ''}やあ！元気？<br><br>何かあったら、何でも話してくれていいよ。`,
                     Dialect: `${userName ? userName + 'さん、' : ''}こんにちは！ようこそ。<br><br>何かあったら、遠慮せんと話してな。`
                 },
-                English: `Hello${userName ? ', ' + userName : ''}. Welcome to the counseling room.<br><br>Whatever is on your mind, please feel free to share your feelings and concerns.`,
+                English: `Hello${userName ? ', ' + userName : ''}. Welcome to the Counseling Room.<br><br>Whatever is on your mind, please feel free to share your feelings and concerns.`,
                 Korean: `안녕하세요${userName ? ' ' + userName + '님' : ''}. 마음 상담실에 오신 것을 환영합니다.<br><br>무엇이든 당신의 기분이나 고민을 들려주세요.`,
                 Chinese: `${userName ? userName + '，' : ''}您好。欢迎来到心理咨询室。<br><br>无论是什么，都请告诉我您的感受和烦恼。`
             };
             
             let message;
             if (language === 'Japanese') {
-                // Check if the style is a prefecture (dialect)
-                if (prefectures.includes(style)) {
+                if (dialects.includes(style)) {
                     message = welcomeMessages.Japanese.Dialect;
                 } else {
-                    // Default to Keigo if style is not Tameguchi
                     message = welcomeMessages.Japanese[style] || welcomeMessages.Japanese.Keigo;
                 }
             } else {
@@ -263,7 +323,7 @@
             
             let roleAndStyle;
             if (language === 'Japanese') {
-                roleAndStyle = prefectures.includes(style) ? styleInstructions.Japanese.Dialect : (styleInstructions.Japanese[style] || styleInstructions.Japanese.Keigo);
+                roleAndStyle = dialects.includes(style) ? styleInstructions.Japanese.Dialect : (styleInstructions.Japanese[style] || styleInstructions.Japanese.Keigo);
             } else {
                 roleAndStyle = styleInstructions[language];
             }
@@ -333,11 +393,27 @@ ${userMessage}`;
         }
 
         // --- Utility Functions ---
+        function applyTranslations() {
+            const t = uiStrings[language] || uiStrings.Japanese;
+            document.title = t.pageTitle;
+            document.getElementById('header-title').innerText = t.headerTitle;
+            document.getElementById('chat-input').placeholder = t.inputPlaceholder;
+            document.getElementById('loading-text').innerText = t.loadingText;
+            document.getElementById('settings-title').innerText = t.settingsTitle;
+            document.getElementById('settings-lang-label').innerText = t.settingsLangLabel;
+            document.getElementById('settings-style-label').innerText = t.settingsStyleLabel;
+            document.getElementById('close-settings-button').innerText = t.settingsCloseButton;
+            document.getElementById('footer-copyright').innerHTML = t.footerCopyright;
+            document.getElementById('footer-disclaimer').innerText = t.footerDisclaimer;
+            document.documentElement.lang = language.split('-')[0].toLowerCase();
+        }
+
         function populateStyleDropdown() {
+            const t = uiStrings[language] || uiStrings.Japanese;
             styleSelect.innerHTML = ''; // Clear existing options
             const options = [
-                { value: 'Keigo', text: '敬語' },
-                { value: 'Tameguchi', text: 'ため口' }
+                { value: 'Keigo', text: t.styleKeigo },
+                { value: 'Tameguchi', text: t.styleTameguchi }
             ];
             
             options.forEach(opt => {
@@ -346,8 +422,8 @@ ${userMessage}`;
             });
 
             const dialectGroup = document.createElement('optgroup');
-            dialectGroup.label = '方言';
-            prefectures.forEach(pref => {
+            dialectGroup.label = t.styleDialectGroup;
+            dialects.forEach(pref => {
                 dialectGroup.appendChild(new Option(pref, pref));
             });
             styleSelect.add(dialectGroup);
@@ -356,13 +432,13 @@ ${userMessage}`;
         function updateSettingsUI() {
             // Update language selection
             document.querySelectorAll('#language-options button').forEach(btn => {
-                btn.classList.toggle('selected', btn.dataset.lang === language);
+                btn.classList.toggle('selected', btn.dataset.lang === tempLanguage);
             });
 
             // Update style selection visibility and state
-            if (language === 'Japanese') {
+            if (tempLanguage === 'Japanese') {
                 styleSection.classList.remove('hidden');
-                styleSelect.value = style;
+                styleSelect.value = tempStyle;
             } else {
                 styleSection.classList.add('hidden');
             }
