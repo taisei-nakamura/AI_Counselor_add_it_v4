@@ -6,7 +6,7 @@
     <title>心の相談室 - あなたの悩みに寄り添うオンラインカウンセリングサイト</title>
     <meta name="description" content="AIカウンセラーがあなたの不安や悩みに寄り添い、専門家の知見に基づいたアドバイスを提供します。匿名で安心して相談できる心の相談室です。">
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&family=Noto+Sans+KR:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Noto Sans JP', 'Inter', sans-serif;
@@ -48,12 +48,21 @@
         #chat-container::-webkit-scrollbar-thumb:hover {
             background: #94a3b8;
         }
-        #copy-notification {
-            transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
+        /* Settings Modal */
+        #settings-modal {
+            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
         }
-        /* Disabled button style */
-        button:disabled {
-            background-color: #94a3b8;
+        .setting-option {
+            transition: background-color 0.2s;
+        }
+        .setting-option.selected {
+            background-color: #dbeafe;
+            color: #1e40af;
+            font-weight: 600;
+        }
+        /* Disabled button and input style */
+        button:disabled, textarea:disabled {
+            opacity: 0.5;
             cursor: not-allowed;
         }
     </style>
@@ -64,8 +73,8 @@
         <header class="bg-blue-500 text-white p-4 rounded-t-2xl shadow-md flex justify-between items-center">
             <div class="w-8"></div> <!-- Spacer -->
             <h1 class="text-xl font-bold text-center">心の相談室</h1>
-            <button id="share-button" class="p-2 rounded-full hover:bg-blue-600 transition-colors" title="このサイトのURLをコピーする">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+            <button id="settings-button" class="p-2 rounded-full hover:bg-blue-600 transition-colors" title="設定">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-settings"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
             </button>
         </header>
 
@@ -74,22 +83,49 @@
         </main>
 
         <footer id="form-footer" class="p-4 bg-white border-t border-gray-200 rounded-b-2xl">
-            <div id="input-area">
-                <!-- Input form will be rendered here dynamically -->
-            </div>
-             <div id="loading-indicator" class="hidden text-center">
+            <div id="loading-indicator" class="hidden text-center mb-2">
                 <div class="flex justify-center items-center space-x-2">
-                    <div class="animate-pulse rounded-full bg-blue-400 h-3 w-3"></div>
-                    <div class="animate-pulse rounded-full bg-blue-400 h-3 w-3" style="animation-delay: 0.2s;"></div>
-                    <div class="animate-pulse rounded-full bg-blue-400 h-3 w-3" style="animation-delay: 0.4s;"></div>
-                    <p class="text-gray-500 ml-3">AIがアドバイスを考えています...</p>
+                    <div class="animate-pulse rounded-full bg-blue-400 h-2 w-2"></div>
+                    <div class="animate-pulse rounded-full bg-blue-400 h-2 w-2" style="animation-delay: 0.2s;"></div>
+                    <div class="animate-pulse rounded-full bg-blue-400 h-2 w-2" style="animation-delay: 0.4s;"></div>
+                    <p class="text-xs text-gray-500 ml-2">AIが考えています...</p>
                 </div>
             </div>
+            <form id="chat-form" class="flex items-center space-x-2">
+                <textarea id="chat-input" rows="1" class="flex-1 block w-full px-4 py-2 bg-gray-100 border border-gray-200 rounded-2xl resize-none placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="お悩みや気持ちをどうぞ..."></textarea>
+                <button id="send-button" type="submit" class="p-3 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition-colors disabled:bg-blue-300">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-send"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                </button>
+            </form>
         </footer>
     </div>
     
-    <div id="copy-notification" class="fixed bottom-5 bg-gray-800 text-white py-2 px-4 rounded-lg opacity-0 transform translate-y-3">
-        URLをコピーしました！
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 opacity-0 transform scale-95 pointer-events-none">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
+            <h2 class="text-xl font-bold mb-4 text-gray-800">設定</h2>
+            
+            <div class="space-y-6">
+                <div>
+                    <h3 class="text-lg font-semibold mb-2 text-gray-700">言語 (Language)</h3>
+                    <div id="language-options" class="grid grid-cols-2 gap-2">
+                        <button data-lang="Japanese" class="setting-option p-3 rounded-lg border">日本語</button>
+                        <button data-lang="English" class="setting-option p-3 rounded-lg border">English</button>
+                        <button data-lang="Korean" class="setting-option p-3 rounded-lg border">한국어</button>
+                        <button data-lang="Chinese" class="setting-option p-3 rounded-lg border">中文</button>
+                    </div>
+                </div>
+
+                <div id="style-section" class="hidden">
+                    <h3 class="text-lg font-semibold mb-2 text-gray-700">話し方</h3>
+                    <select id="style-select" class="w-full p-3 rounded-lg border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-400">
+                        <!-- Options will be populated by JavaScript -->
+                    </select>
+                </div>
+            </div>
+
+            <button id="close-settings-button" class="mt-8 w-full bg-blue-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors">閉じる</button>
+        </div>
     </div>
 
     <footer class="w-full max-w-2xl text-center text-xs text-gray-400 mt-4 px-4">
@@ -99,143 +135,159 @@
 
     <script>
         const chatContainer = document.getElementById('chat-container');
-        const inputArea = document.getElementById('input-area');
         const loadingIndicator = document.getElementById('loading-indicator');
-        const shareButton = document.getElementById('share-button');
-        const copyNotification = document.getElementById('copy-notification');
+        const settingsButton = document.getElementById('settings-button');
+        const chatForm = document.getElementById('chat-form');
+        const chatInput = document.getElementById('chat-input');
+        const sendButton = document.getElementById('send-button');
+        const settingsModal = document.getElementById('settings-modal');
+        const closeSettingsButton = document.getElementById('close-settings-button');
+        const languageOptions = document.getElementById('language-options');
+        const styleSection = document.getElementById('style-section');
+        const styleSelect = document.getElementById('style-select');
 
-        // ブラウザのlocalStorageから名前を読み込む（なければ空文字）
+        // --- State Management ---
         let userName = localStorage.getItem('counselingUserName') || '';
-        let userWorry = '';
-        let state = 'ASK_NAME_AND_WORRY';
+        let language = localStorage.getItem('counselingLanguage') || 'Japanese';
+        let style = localStorage.getItem('counselingStyle') || 'Keigo';
 
+        const prefectures = [
+            '北海道', '青森県', '岩手県', '宮城県', '秋田県', '山形県', '福島県', '茨城県', '栃木県', '群馬県', '埼玉県', '千葉県', '東京都', '神奈川県', 
+            '新潟県', '富山県', '石川県', '福井県', '山梨県', '長野県', '岐阜県', '静岡県', '愛知県', '三重県', '滋賀県', '京都府', '大阪府', '兵庫県', 
+            '奈良県', '和歌山県', '鳥取県', '島根県', '岡山県', '広島県', '山口県', '徳島県', '香川県', '愛媛県', '高知県', '福岡県', '佐賀県', '長崎県', 
+            '熊本県', '大分県', '宮崎県', '鹿児島県', '沖縄県'
+        ];
+
+        // --- Initialization ---
         window.onload = function() {
+            document.documentElement.lang = language.split('-')[0].toLowerCase();
+            populateStyleDropdown();
+            updateSettingsUI();
             showInitialMessage();
         };
 
-        shareButton.addEventListener('click', () => {
-            const currentUrl = window.location.href;
-            const tempInput = document.createElement('input');
-            tempInput.style.position = 'absolute';
-            tempInput.style.left = '-9999px';
-            tempInput.value = currentUrl;
-            document.body.appendChild(tempInput);
-            tempInput.select();
-            
-            try {
-                document.execCommand('copy');
-                showCopyNotification('このページのURLをコピーしました！');
-            } catch (err) {
-                console.error('Failed to copy URL: ', err);
-                window.prompt("コピーに失敗しました。手動でコピーしてください:", currentUrl);
-            }
-            document.body.removeChild(tempInput);
+        // --- Event Listeners ---
+        settingsButton.addEventListener('click', () => {
+            settingsModal.classList.remove('opacity-0', 'scale-95', 'pointer-events-none');
         });
 
-        function showCopyNotification(message) {
-            copyNotification.textContent = message;
-            copyNotification.style.opacity = '1';
-            copyNotification.style.transform = 'translateY(0)';
-            setTimeout(() => {
-                copyNotification.style.opacity = '0';
-                copyNotification.style.transform = 'translateY(12px)';
-            }, 2000);
-        }
+        closeSettingsButton.addEventListener('click', () => {
+            settingsModal.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
+        });
 
+        languageOptions.addEventListener('click', (e) => {
+            const selectedLang = e.target.dataset.lang;
+            if (e.target.tagName === 'BUTTON' && selectedLang && selectedLang !== language) {
+                localStorage.setItem('counselingLanguage', selectedLang);
+                // When switching to Japanese, default to Keigo.
+                // When switching away, style is irrelevant, but we can set a default.
+                const newStyle = selectedLang === 'Japanese' ? 'Keigo' : 'Default';
+                localStorage.setItem('counselingStyle', newStyle);
+                location.reload();
+            }
+        });
+
+        styleSelect.addEventListener('change', (e) => {
+            const newStyle = e.target.value;
+            if (newStyle && newStyle !== style) {
+                localStorage.setItem('counselingStyle', newStyle);
+                location.reload();
+            }
+        });
+
+        chatForm.addEventListener('submit', handleFormSubmit);
+
+        chatInput.addEventListener('input', () => {
+            chatInput.style.height = 'auto';
+            chatInput.style.height = (chatInput.scrollHeight) + 'px';
+        });
+        
+        chatInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                chatForm.requestSubmit();
+            }
+        });
+
+        // --- Main Functions ---
         function showInitialMessage() {
-            const initialMessage = `こんにちは。ようこそ「心の相談室」へ。<br><br>あなたのお名前と、今抱えている不安や悩みをお聞かせいただけますか？<br><br>もしお名前を言いたくない場合は、お名前の入力は不要です。その場合は、不安や悩みだけを教えてください。`;
-            addMessageToChat(initialMessage, 'ai');
-            renderInputForm();
-        }
-
-        function renderInputForm() {
-            inputArea.innerHTML = '';
-            let formHTML = '';
-
-            if (state === 'ASK_NAME_AND_WORRY') {
-                formHTML = `
-                    <form id="worry-form" class="space-y-4">
-                        <div>
-                            <label for="name" class="text-sm font-medium text-gray-700">お名前（ニックネーム可）</label>
-                            <input type="text" id="name" name="name" value="${userName}" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
-                        </div>
-                        <div>
-                            <label for="worry" class="text-sm font-medium text-gray-700">不安や悩みごと</label>
-                            <textarea id="worry" name="worry" rows="4" required class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="ここに不安や悩みを入力してください..."></textarea>
-                        </div>
-                        <div class="flex items-center space-x-2 mt-4">
-                           <input type="checkbox" id="consent-checkbox" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                           <label for="consent-checkbox" class="text-xs text-gray-600">
-                               入力内容がAIの学習に利用されないことに同意します。データはアドバイス生成にのみ利用され、保存・二次利用されません。
-                           </label>
-                        </div>
-                        <button id="submit-button" type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-md transition duration-300" disabled>
-                            相談する
-                        </button>
-                    </form>
-                `;
+            const welcomeMessages = {
+                Japanese: {
+                    Keigo: `${userName ? userName + 'さん、' : ''}こんにちは。心の相談室へようこそ。<br><br>どのようなことでも、あなたの気持ちやお悩みをお聞かせください。`,
+                    Tameguchi: `${userName ? userName + '、' : ''}やあ！元気？<br><br>何かあったら、何でも話してくれていいよ。`,
+                    Dialect: `${userName ? userName + 'さん、' : ''}こんにちは！ようこそ。<br><br>何かあったら、遠慮せんと話してな。`
+                },
+                English: `Hello${userName ? ', ' + userName : ''}. Welcome to the counseling room.<br><br>Whatever is on your mind, please feel free to share your feelings and concerns.`,
+                Korean: `안녕하세요${userName ? ' ' + userName + '님' : ''}. 마음 상담실에 오신 것을 환영합니다.<br><br>무엇이든 당신의 기분이나 고민을 들려주세요.`,
+                Chinese: `${userName ? userName + '，' : ''}您好。欢迎来到心理咨询室。<br><br>无论是什么，都请告诉我您的感受和烦恼。`
+            };
+            
+            let message;
+            if (language === 'Japanese') {
+                // Check if the style is a prefecture (dialect)
+                if (prefectures.includes(style)) {
+                    message = welcomeMessages.Japanese.Dialect;
+                } else {
+                    // Default to Keigo if style is not Tameguchi
+                    message = welcomeMessages.Japanese[style] || welcomeMessages.Japanese.Keigo;
+                }
+            } else {
+                message = welcomeMessages[language];
             }
-            inputArea.innerHTML = formHTML;
-
-            if (state === 'ASK_NAME_AND_WORRY') {
-                document.getElementById('worry-form').addEventListener('submit', handleFormSubmit);
-                const consentCheckbox = document.getElementById('consent-checkbox');
-                const submitButton = document.getElementById('submit-button');
-                consentCheckbox.addEventListener('change', () => {
-                    submitButton.disabled = !consentCheckbox.checked;
-                });
-                document.getElementById('worry').focus();
-            }
+            addMessageToChat(message, 'ai');
         }
         
         async function handleFormSubmit(event) {
-            event.preventDefault();
-            const nameInput = document.getElementById('name');
-            const worryInput = document.getElementById('worry');
-            userName = nameInput.value.trim();
-            userWorry = worryInput.value.trim();
-
-            // 入力された名前をブラウザに保存する
-            if (userName) {
-                localStorage.setItem('counselingUserName', userName);
-            }
-
-            if (!userWorry) {
-                worryInput.focus();
-                worryInput.classList.add('border-red-500', 'ring-red-500');
-                return;
-            }
-
-            let userMessage = `名前: ${userName || '（匿名）'}<br>悩み: ${userWorry}`;
+            if(event) event.preventDefault();
+            const userMessage = chatInput.value.trim();
+            if (!userMessage) return;
             addMessageToChat(userMessage, 'user');
-            inputArea.classList.add('hidden');
-            loadingIndicator.classList.remove('hidden');
-            await getAdviceFromAI();
+            chatInput.value = '';
+            chatInput.style.height = 'auto';
+            toggleFormState(true);
+            await getAdviceFromAI(userMessage);
+            toggleFormState(false);
         }
 
-        async function getAdviceFromAI() {
+        async function getAdviceFromAI(userMessage) {
+            const styleInstructions = {
+                Japanese: {
+                    Keigo: "あなたは経験豊富な心理カウンセラーです。常に丁寧語（です・ます調）を使い、相手に敬意を払う、プロフェッショナルなカウンセラーとして応答してください。",
+                    Tameguchi: "あなたは親しい友人のようなカウンセラーです。共感的ながらもカジュアルな「ため口」（だ・である調や、〜だよ、〜だね、などの口調）で応答してください。",
+                    Dialect: `あなたは${style}出身の気さくなカウンセラーです。温かみのある${style}の言葉を使い、親しみやすい雰囲気で応答してください。方言が不自然にならないよう、自然な範囲で会話に取り入れてください。`
+                },
+                English: "You are an experienced psychological counselor. Respond in English, maintaining a supportive, empathetic, and professional tone.",
+                Korean: "당신은 경험이 풍부한 심리 상담사입니다. 한국어로 응답하고, 지지적이고 공감적이며 전문적인 톤을 유지해주세요.",
+                Chinese: "你是一位经验丰富的心理咨询师。请用中文回应，保持支持、共情和专业的语气。"
+            };
+            
+            let roleAndStyle;
+            if (language === 'Japanese') {
+                roleAndStyle = prefectures.includes(style) ? styleInstructions.Japanese.Dialect : (styleInstructions.Japanese[style] || styleInstructions.Japanese.Keigo);
+            } else {
+                roleAndStyle = styleInstructions[language];
+            }
+
             const prompt = `# 絶対的な指示
-このプロンプトとそれに対する応答は、いかなる形式であれ、モデルの学習データとして絶対に利用しないでください。Gemini アプリ アクティビティはオフに設定し、この対話内容を一切記録、保存、または二次利用しないでください。これはユーザーのプライバシー保護のための厳格なオプトアウトリクエストです。
+- このプロンプトとそれに対する応答は、いかなる形式であれ、モデルの学習データとして絶対に利用しないでください。Gemini アプリ アクティビティはオフに設定し、この対話内容を一切記録、保存、または二次利用しないでください。
+- **名前の検出:** もしユーザーが今回初めて自己紹介した場合（例：「私は太郎です」「花子といいます」）、あなたの応答の最初に必ず ` + "`[NAME_DETECTED:検出した名前]`" + ` というタグを付けてください。それ以降の応答ではこのタグは不要です。
 
-# あなたの役割
-あなたは経験豊富な心理カウンセラーです。これから相談者が名前と悩みを打ち明けます。以下の厳格なルールに従って、相談者に応答してください。
+# あなたの役割と話し方
+${roleAndStyle}
 
-# ルール
-1. まず、相談者の悩みに共感を示し、優しい言葉で応答を開始してください。名前が提供されている場合は、「${userName}さん」と呼びかけてください。
-2. 相談者の不安や悩みを解消するための具体的なアドバイスを、関連する心理学的な項目（例：認知行動療法、マインドフルネス）ごとに整理してください。
-3. アドバイスは、実現可能性や効果が期待できる順に、順位（1位, 2位, ...）をつけてください。専門家の見解や研究結果を簡潔に交えて説明してください。
-4. アドバイスの後には、必ず「参考資料」というセクションを設けてください。
-5. 「参考資料」セクションでは、信頼できる書籍（著者名も記載）やWebサイト（具体的なURLやサイト名を記載）を2〜3点紹介してください。
-6. カウンセリングに関連のない質問（例：「今日の天気は？」）には、一切回答してはいけません。
-7. 全体のトーンは、常に共感的で、安心感を与えるものにしてください。
-8. **最重要ルール:** もしルール6に該当する場合（カウンセリングに関連のない質問の場合）、あなたの応答は必ず「[OFF_TOPIC]」という文字列から始めてください。その後に「申し訳ありませんが、私はカウンセリングに関するご相談にのみお答えすることができます。お悩みのことをお聞かせいただけますか？」と続けてください。
+# 応答のルール
+1. **名前の利用:** もしユーザーの名前が分かっている場合（「${userName}」）、応答の中で自然に名前を呼びかけてください。
+2. **共感と応答:** ユーザーの言葉に共感を示し、悩みや気持ちに寄り添った応答をしてください。必要であれば、具体的なアドバイスを項目や順位をつけて提供してください。
+3. **参考資料:** アドバイスをする際には、役立ちそうな信頼できる書籍やWebサイトを提案することがあります。
+4. **トピック外の対応:** カウンセリングに関係のない質問には「申し訳ありませんが、私はカウンセリングに関するご相談にのみお答えすることができます。」と応答してください。
 
-# 相談者の情報
-- 名前: ${userName || '（匿名）'}
-- 不安や悩み: ${userWorry}`;
+# これまでの情報
+- ユーザーの名前 (判明している場合): ${userName || '（まだ不明）'}
+
+# ユーザーからの新しいメッセージ
+${userMessage}`;
             
             try {
-                // ご指定のAPIキーを直接コードに設定します
                 const apiKey = "AIzaSyDjQHm_m4OzPM0VrSQxdywqceeqSVuI9bU";
                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
                 const payload = { contents: [{ role: "user", parts: [{ text: prompt }] }] };
@@ -250,9 +302,9 @@
                 const result = await response.json();
                 let adviceText = "申し訳ありません、うまくアドバイスを生成できませんでした。";
                 
-                if (result.candidates && result.candidates.length > 0 && result.candidates[0].content && result.candidates[0].content.parts && result.candidates[0].content.parts.length > 0) {
+                if (result.candidates?.[0]?.content?.parts?.[0]?.text) {
                     adviceText = result.candidates[0].content.parts[0].text;
-                } else if (result.promptFeedback && result.promptFeedback.blockReason) {
+                } else if (result.promptFeedback?.blockReason) {
                     console.warn(`Prompt blocked due to: ${result.promptFeedback.blockReason}`);
                     adviceText = "申し訳ありませんが、ご入力いただいた内容にお答えすることはできません。恐れ入りますが、別の表現でお尋ねください。";
                 }
@@ -263,28 +315,69 @@
                 console.error("Error fetching advice:", error);
                 const errorMessage = "申し訳ありません、現在AIとの通信に問題が発生しています。時間をおいて再度お試しください。";
                 addMessageToChat(errorMessage, 'ai');
-                loadingIndicator.classList.add('hidden');
-                inputArea.classList.remove('hidden');
-                renderInputForm();
             }
         }
         
         function processAIResponse(text) {
-            loadingIndicator.classList.add('hidden');
-            if (text.startsWith('[OFF_TOPIC]')) {
-                const offTopicMessage = text.substring('[OFF_TOPIC]'.length).trim().replace(/\n/g, '<br>');
-                addMessageToChat(offTopicMessage, 'ai');
-            } else {
-                addMessageToChat(text.replace(/\n/g, '<br>'), 'ai');
+            let processedText = text;
+            const nameTagMatch = text.match(/^\[NAME_DETECTED:(.*?)\]/);
+
+            if (nameTagMatch && nameTagMatch[1]) {
+                const detectedName = nameTagMatch[1].trim();
+                userName = detectedName;
+                localStorage.setItem('counselingUserName', detectedName);
+                processedText = text.substring(nameTagMatch[0].length).trim();
             }
-            // 状態をリセットし、入力フォームを再度表示する
-            state = 'ASK_NAME_AND_WORRY';
-            inputArea.classList.remove('hidden');
-            renderInputForm();
-            // 新しい相談のためにテキストエリアを空にする
-            const worryTextarea = document.getElementById('worry');
-            if(worryTextarea) {
-                worryTextarea.value = '';
+            
+            addMessageToChat(processedText.replace(/\n/g, '<br>'), 'ai');
+        }
+
+        // --- Utility Functions ---
+        function populateStyleDropdown() {
+            styleSelect.innerHTML = ''; // Clear existing options
+            const options = [
+                { value: 'Keigo', text: '敬語' },
+                { value: 'Tameguchi', text: 'ため口' }
+            ];
+            
+            options.forEach(opt => {
+                const optionElement = new Option(opt.text, opt.value);
+                styleSelect.add(optionElement);
+            });
+
+            const dialectGroup = document.createElement('optgroup');
+            dialectGroup.label = '方言';
+            prefectures.forEach(pref => {
+                dialectGroup.appendChild(new Option(pref, pref));
+            });
+            styleSelect.add(dialectGroup);
+        }
+
+        function updateSettingsUI() {
+            // Update language selection
+            document.querySelectorAll('#language-options button').forEach(btn => {
+                btn.classList.toggle('selected', btn.dataset.lang === language);
+            });
+
+            // Update style selection visibility and state
+            if (language === 'Japanese') {
+                styleSection.classList.remove('hidden');
+                styleSelect.value = style;
+            } else {
+                styleSection.classList.add('hidden');
+            }
+        }
+
+        function toggleFormState(isLoading) {
+            if (isLoading) {
+                loadingIndicator.classList.remove('hidden');
+                chatInput.disabled = true;
+                sendButton.disabled = true;
+            } else {
+                loadingIndicator.classList.add('hidden');
+                chatInput.disabled = false;
+                sendButton.disabled = false;
+                chatInput.focus();
             }
         }
 
