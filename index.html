@@ -48,11 +48,11 @@
         #chat-container::-webkit-scrollbar-thumb:hover {
             background: #94a3b8;
         }
-        /* Settings Modal */
-        #settings-modal {
+        /* Modals */
+        .modal {
             transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
         }
-        .setting-option {
+        .setting-option, .topic-option {
             transition: background-color 0.2s;
         }
         .setting-option.selected {
@@ -92,6 +92,9 @@
                 </div>
             </div>
             <form id="chat-form" class="flex items-center space-x-2">
+                <button id="topic-button" type="button" class="p-3 bg-gray-200 text-gray-600 rounded-full hover:bg-gray-300 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-list"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+                </button>
                 <textarea id="chat-input" rows="1" class="flex-1 block w-full px-4 py-2 bg-gray-100 border border-gray-200 rounded-2xl resize-none placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="お悩みや気持ちをどうぞ..."></textarea>
                 <button id="send-button" type="submit" class="p-3 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition-colors disabled:bg-blue-300">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-send"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
@@ -101,10 +104,9 @@
     </div>
     
     <!-- Settings Modal -->
-    <div id="settings-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 opacity-0 transform scale-95 pointer-events-none">
+    <div id="settings-modal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 opacity-0 transform scale-95 pointer-events-none">
         <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
             <h2 id="settings-title" class="text-xl font-bold mb-4 text-gray-800">設定</h2>
-            
             <div class="space-y-6">
                 <div>
                     <h3 id="settings-lang-label" class="text-lg font-semibold mb-2 text-gray-700">言語 (Language)</h3>
@@ -115,16 +117,30 @@
                         <button data-lang="Chinese" class="setting-option p-3 rounded-lg border">中文</button>
                     </div>
                 </div>
-
                 <div id="style-section" class="hidden">
                     <h3 id="settings-style-label" class="text-lg font-semibold mb-2 text-gray-700">話し方</h3>
-                    <select id="style-select" class="w-full p-3 rounded-lg border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-400">
-                        <!-- Options will be populated by JavaScript -->
-                    </select>
+                    <select id="style-select" class="w-full p-3 rounded-lg border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-400"></select>
+                </div>
+                 <div>
+                    <h3 id="settings-feedback-label" class="text-lg font-semibold mb-2 text-gray-700">フィードバック</h3>
+                    <select id="feedback-select" class="w-full p-3 rounded-lg border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-400"></select>
                 </div>
             </div>
-
             <button id="close-settings-button" class="mt-8 w-full bg-blue-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors">閉じる</button>
+        </div>
+    </div>
+
+    <!-- Topic Modal -->
+    <div id="topic-modal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 opacity-0 transform scale-95 pointer-events-none">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
+            <h2 id="topic-title" class="text-xl font-bold mb-4 text-gray-800">相談トピックを選ぶ</h2>
+            <div id="topic-options" class="grid grid-cols-2 gap-3">
+                <!-- Topic buttons will be populated by JavaScript -->
+            </div>
+            <div id="topic-footer" class="mt-8">
+                 <button id="topic-back-button" class="hidden w-full bg-gray-200 text-gray-700 font-bold py-2 px-4 rounded-lg hover:bg-gray-300 transition-colors">戻る</button>
+                 <button id="close-topic-button" class="w-full bg-gray-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-600 transition-colors mt-2">キャンセル</button>
+            </div>
         </div>
     </div>
 
@@ -145,69 +161,100 @@
         const languageOptions = document.getElementById('language-options');
         const styleSection = document.getElementById('style-section');
         const styleSelect = document.getElementById('style-select');
+        const feedbackSelect = document.getElementById('feedback-select');
+        const topicButton = document.getElementById('topic-button');
+        const topicModal = document.getElementById('topic-modal');
+        const closeTopicButton = document.getElementById('close-topic-button');
+        const topicOptions = document.getElementById('topic-options');
+        const topicTitle = document.getElementById('topic-title');
+        const topicFooter = document.getElementById('topic-footer');
+        const topicBackButton = document.getElementById('topic-back-button');
 
         // --- State Management ---
         let userName = localStorage.getItem('counselingUserName') || '';
         let language = localStorage.getItem('counselingLanguage') || 'Japanese';
         let style = localStorage.getItem('counselingStyle') || 'Keigo';
-        // Temporary state for settings modal
+        let feedbackTime = localStorage.getItem('counselingFeedbackTime') || '0'; // in minutes, '0' means off
         let tempLanguage = language;
         let tempStyle = style;
+        let tempFeedbackTime = feedbackTime;
 
         const dialects = ['関西弁', '鹿児島弁'];
-
-        // --- UI Text Translations ---
+        
+        // --- UI Text and Topic Translations ---
         const uiStrings = {
             Japanese: {
-                pageTitle: "心の相談室 - あなたの悩みに寄り添うオンラインカウンセリングサイト",
-                headerTitle: "心の相談室",
-                inputPlaceholder: "お悩みや気持ちをどうぞ...",
-                loadingText: "AIが考えています...",
-                settingsTitle: "設定",
-                settingsLangLabel: "言語",
-                settingsStyleLabel: "話し方",
-                settingsCloseButton: "閉じる",
-                footerCopyright: "&copy; 2024 心の相談室. All Rights Reserved.",
-                footerDisclaimer: "このサイトはAIによるアドバイスを提供します。専門的な医療やカウンセリングの代替となるものではありません。深刻な悩みをお持ちの場合は、専門の医療機関にご相談ください。",
-                styleKeigo: "敬語",
-                styleTameguchi: "ため口",
-                styleDialectGroup: "方言"
+                pageTitle: "心の相談室 - あなたの悩みに寄り添うオンラインカウンセリングサイト", headerTitle: "心の相談室", inputPlaceholder: "お悩みや気持ちをどうぞ...", loadingText: "AIが考えています...",
+                settingsTitle: "設定", settingsLangLabel: "言語", settingsStyleLabel: "話し方", settingsFeedbackLabel: "フィードバック", settingsCloseButton: "閉じる",
+                topicTitle: "相談トピックを選ぶ", topicDetailTitle: "{topic}について、具体的には？", topicCancel: "キャンセル", topicBack: "戻る", iWantToTalkAbout: "{topic}について、特に{subtopic}で悩んでいます。",
+                styleKeigo: "敬語", styleTameguchi: "ため口", styleDialectGroup: "方言",
+                feedbackOff: "不要", minutesSuffix: "分後", hourSuffix: "時間後",
+                followUpMessage: "その後、いかがお過ごしでしょうか？<br><br>先ほどのアドバイスは、何か少しでもお気持ちを楽にするヒントになりましたでしょうか。もしよろしければ、簡単なご感想をお聞かせください。",
+                genericErrorMessage: "申し訳ありません、現在AIとの通信に問題が発生しています。時間をおいて再度お試しください。",
+                reloadErrorMessage: "サーバーが混み合っているようです。お手数ですが、ページを再読み込みしてお試しください。",
+                rateLimitErrorMessage: "リクエストが多すぎます。しばらく時間をおいてから、もう一度お試しください。",
+                footerCopyright: "&copy; 2024 心の相談室. All Rights Reserved.", footerDisclaimer: "このサイトはAIによるアドバイスを提供します。専門的な医療やカウンセリングの代替となるものではありません。深刻な悩みをお持ちの場合は、専門の医療機関にご相談ください。",
+                topics: {
+                    work_stress: { text: "仕事のストレス", subtopics: { relationships: "人間関係", workload: "仕事量", evaluation: "評価・キャリア" } },
+                    relationships: { text: "人間関係の悩み", subtopics: { friends: "友人関係", romance: "恋愛関係", family: "家族関係" } },
+                    future_anxiety: { text: "将来への不安", subtopics: { career: "仕事・キャリア", money: "お金", health: "健康" } },
+                    depression: { text: "気分の落ち込み", subtopics: { motivation: "やる気が出ない", anhedonia: "何も楽しくない", sleep: "眠れない" } },
+                    self_esteem: { text: "自己肯定感が低い", subtopics: { self_blame: "自分を責めてしまう", comparison: "他人と比較してしまう", confidence: "自信が持てない" } }
+                }
             },
             English: {
-                pageTitle: "Counseling Room - Online counseling site that listens to your worries",
-                headerTitle: "Counseling Room",
-                inputPlaceholder: "Please share your worries and feelings...",
-                loadingText: "AI is thinking...",
-                settingsTitle: "Settings",
-                settingsLangLabel: "Language",
-                settingsStyleLabel: "Style",
-                settingsCloseButton: "Close",
-                footerCopyright: "&copy; 2024 Counseling Room. All Rights Reserved.",
-                footerDisclaimer: "This site provides advice by AI. It is not a substitute for professional medical care or counseling. If you have serious concerns, please consult a medical institution."
+                pageTitle: "Counseling Room - Online counseling site that listens to your worries", headerTitle: "Counseling Room", inputPlaceholder: "Please share your worries and feelings...", loadingText: "AI is thinking...",
+                settingsTitle: "Settings", settingsLangLabel: "Language", settingsStyleLabel: "Style", settingsFeedbackLabel: "Feedback", settingsCloseButton: "Close",
+                topicTitle: "Choose a topic to discuss", topicDetailTitle: "More specifically, about {topic}?", topicCancel: "Cancel", topicBack: "Back", iWantToTalkAbout: "I'd like to talk about {topic}, specifically regarding {subtopic}.",
+                feedbackOff: "Not needed", minutesSuffix: "minutes later", hourSuffix: "hour later",
+                followUpMessage: "How have you been since then?<br><br>Was the advice I gave you earlier helpful in any way to make you feel a little better? If you'd like, please let me know your brief thoughts.",
+                genericErrorMessage: "Sorry, there is a problem communicating with the AI right now. Please try again later.",
+                reloadErrorMessage: "The server seems to be busy. Please reload the page and try again.",
+                rateLimitErrorMessage: "Too many requests. Please wait a while and try again.",
+                footerCopyright: "&copy; 2024 Counseling Room. All Rights Reserved.", footerDisclaimer: "This site provides advice by AI. It is not a substitute for professional medical care or counseling. If you have serious concerns, please consult a medical institution.",
+                topics: {
+                    work_stress: { text: "Work Stress", subtopics: { relationships: "Relationships", workload: "Workload", evaluation: "Evaluation/Career" } },
+                    relationships: { text: "Relationship Problems", subtopics: { friends: "Friendships", romance: "Romantic", family: "Family" } },
+                    future_anxiety: { text: "Anxiety about the future", subtopics: { career: "Work/Career", money: "Money", health: "Health" } },
+                    depression: { text: "Feeling Down", subtopics: { motivation: "Lack of motivation", anhedonia: "Anhedonia", sleep: "Insomnia" } },
+                    self_esteem: { text: "Low Self-Esteem", subtopics: { self_blame: "Self-blame", comparison: "Comparing to others", confidence: "Lack of confidence" } }
+                }
             },
             Korean: {
-                pageTitle: "마음 상담실 - 당신의 고민에 귀 기울이는 온라인 상담 사이트",
-                headerTitle: "마음 상담실",
-                inputPlaceholder: "고민이나 기분을 말씀해주세요...",
-                loadingText: "AI가 생각 중입니다...",
-                settingsTitle: "설정",
-                settingsLangLabel: "언어",
-                settingsStyleLabel: "말투",
-                settingsCloseButton: "닫기",
-                footerCopyright: "&copy; 2024 마음 상담실. All Rights Reserved.",
-                footerDisclaimer: "이 사이트는 AI에 의한 조언을 제공합니다. 전문적인 의료나 상담을 대체하는 것이 아닙니다. 심각한 고민이 있으신 분은 전문 의료기관에 상담해주세요."
+                pageTitle: "마음 상담실 - 당신의 고민에 귀 기울이는 온라인 상담 사이트", headerTitle: "마음 상담실", inputPlaceholder: "고민이나 기분을 말씀해주세요...", loadingText: "AI가 생각 중입니다...",
+                settingsTitle: "설정", settingsLangLabel: "언어", settingsStyleLabel: "말투", settingsFeedbackLabel: "피드백", settingsCloseButton: "닫기",
+                topicTitle: "상담 주제 선택", topicDetailTitle: "{topic}에 대해, 구체적으로는?", topicCancel: "취소", topicBack: "뒤로", iWantToTalkAbout: "{topic}에 대해, 특히 {subtopic}에 대해 상담하고 싶습니다.",
+                feedbackOff: "필요 없음", minutesSuffix: "분 후", hourSuffix: "시간 후",
+                followUpMessage: "그동안 어떻게 지내셨나요?<br><br>조금 전의 조언이 조금이라도 마음을 편안하게 하는 데 도움이 되었나요? 괜찮으시다면 간단한 소감을 들려주세요.",
+                genericErrorMessage: "죄송합니다. 현재 AI와 통신하는 데 문제가 발생했습니다. 나중에 다시 시도해주세요.",
+                reloadErrorMessage: "서버가 혼잡한 것 같습니다. 페이지를 새로고침하고 다시 시도해주세요.",
+                rateLimitErrorMessage: "요청이 너무 많습니다. 잠시 후 다시 시도해주세요.",
+                footerCopyright: "&copy; 2024 마음 상담실. All Rights Reserved.", footerDisclaimer: "이 사이트는 AI에 의한 조언을 제공합니다. 전문적인 의료나 상담을 대체하는 것이 아닙니다. 심각한 고민이 있으신 분은 전문 의료기관에 상담해주세요.",
+                topics: {
+                    work_stress: { text: "업무 스트레스", subtopics: { relationships: "인간관계", workload: "업무량", evaluation: "평가/경력" } },
+                    relationships: { text: "인간관계 고민", subtopics: { friends: "친구 관계", romance: "연애 관계", family: "가족 관계" } },
+                    future_anxiety: { text: "미래에 대한 불안", subtopics: { career: "일/경력", money: "돈", health: "건강" } },
+                    depression: { text: "기분 저하", subtopics: { motivation: "의욕 없음", anhedonia: "즐거움 없음", sleep: "불면증" } },
+                    self_esteem: { text: "낮은 자존감", subtopics: { self_blame: "자책", comparison: "타인과 비교", confidence: "자신감 부족" } }
+                }
             },
             Chinese: {
-                pageTitle: "心理咨询室 - 倾听您烦恼的在线咨询网站",
-                headerTitle: "心理咨询室",
-                inputPlaceholder: "请告诉我您的烦恼和感受...",
-                loadingText: "AI正在思考...",
-                settingsTitle: "设置",
-                settingsLangLabel: "语言",
-                settingsStyleLabel: "说话方式",
-                settingsCloseButton: "关闭",
-                footerCopyright: "&copy; 2024 心理咨询室. All Rights Reserved.",
-                footerDisclaimer: "本网站提供AI建议。它不能替代专业的医疗或咨询。如果您有严重的疑虑，请咨询医疗机构。"
+                pageTitle: "心理咨询室 - 倾听您烦恼的在线咨询网站", headerTitle: "心理咨询室", inputPlaceholder: "请告诉我您的烦恼和感受...", loadingText: "AI正在思考...",
+                settingsTitle: "设置", settingsLangLabel: "语言", settingsStyleLabel: "说话方式", settingsFeedbackLabel: "反馈", settingsCloseButton: "关闭",
+                topicTitle: "选择咨询主题", topicDetailTitle: "关于{topic}，具体是？", topicCancel: "取消", topicBack: "返回", iWantToTalkAbout: "我想谈谈关于{topic}的问题，特别是关于{subtopic}。",
+                feedbackOff: "不需要", minutesSuffix: "分钟后", hourSuffix: "小时后",
+                followUpMessage: "那之后您过得怎么样？<br><br>刚才的建议有没有让您的心情轻松一点？如果可以的话，请告诉我您的简短感想。",
+                genericErrorMessage: "抱歉，现在与AI通信出现问题。请稍后再试。",
+                reloadErrorMessage: "服务器似乎很忙。请重新加载页面再试一次。",
+                rateLimitErrorMessage: "请求过多。请稍后再试。",
+                footerCopyright: "&copy; 2024 心理咨询室. All Rights Reserved.", footerDisclaimer: "本网站提供AI建议。它不能替代专业的医疗或咨询。如果您有严重的疑虑，请咨询医疗机构。",
+                topics: {
+                    work_stress: { text: "工作压力", subtopics: { relationships: "人际关系", workload: "工作量", evaluation: "评价/职业" } },
+                    relationships: { text: "人际关系问题", subtopics: { friends: "朋友关系", romance: "恋爱关系", family: "家庭关系" } },
+                    future_anxiety: { text: "对未来的焦虑", subtopics: { career: "工作/职业", money: "金钱", health: "健康" } },
+                    depression: { text: "情绪低落", subtopics: { motivation: "没有动力", anhedonia: "感觉不到快乐", sleep: "失眠" } },
+                    self_esteem: { text: "低自尊", subtopics: { self_blame: "自责", comparison: "与他人比较", confidence: "缺乏自信" } }
+                }
             }
         };
 
@@ -215,45 +262,80 @@
         window.onload = function() {
             applyTranslations();
             populateStyleDropdown();
+            populateFeedbackDropdown();
             updateSettingsUI();
             showInitialMessage();
         };
 
         // --- Event Listeners ---
         settingsButton.addEventListener('click', () => {
-            // Reset temp state when opening modal
             tempLanguage = language;
             tempStyle = style;
-            updateSettingsUI(); // Ensure UI is up-to-date before showing
+            tempFeedbackTime = feedbackTime;
+            updateSettingsUI();
             settingsModal.classList.remove('opacity-0', 'scale-95', 'pointer-events-none');
         });
 
         closeSettingsButton.addEventListener('click', () => {
             settingsModal.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
-            // Check if settings have changed
-            if (tempLanguage !== language || tempStyle !== style) {
+            if (tempLanguage !== language || tempStyle !== style || tempFeedbackTime !== feedbackTime) {
                 localStorage.setItem('counselingLanguage', tempLanguage);
                 localStorage.setItem('counselingStyle', tempStyle);
+                localStorage.setItem('counselingFeedbackTime', tempFeedbackTime);
                 location.reload();
             }
         });
 
+        topicButton.addEventListener('click', () => {
+            populateMainTopics();
+            topicModal.classList.remove('opacity-0', 'scale-95', 'pointer-events-none');
+        });
+        
+        closeTopicButton.addEventListener('click', () => {
+            topicModal.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
+        });
+        
+        topicBackButton.addEventListener('click', populateMainTopics);
+
         languageOptions.addEventListener('click', (e) => {
             if (e.target.tagName === 'BUTTON' && e.target.dataset.lang) {
                 tempLanguage = e.target.dataset.lang;
-                if (tempLanguage !== 'Japanese') {
-                    tempStyle = 'Default';
-                } else {
-                    tempStyle = 'Keigo';
-                }
+                tempStyle = tempLanguage === 'Japanese' ? 'Keigo' : 'Default';
                 updateSettingsUI();
             }
         });
 
         styleSelect.addEventListener('change', (e) => {
-            if (e.target.value) {
-                tempStyle = e.target.value;
-                updateSettingsUI();
+            if (e.target.value) tempStyle = e.target.value;
+        });
+
+        feedbackSelect.addEventListener('change', (e) => {
+            if (e.target.value) tempFeedbackTime = e.target.value;
+        });
+        
+        topicOptions.addEventListener('click', (e) => {
+            const button = e.target.closest('button');
+            if (!button) return;
+
+            const action = button.dataset.action;
+            if (action === 'select-main-topic') {
+                const topicKey = button.dataset.topicKey;
+                populateSubTopics(topicKey);
+            } else if (action === 'select-sub-topic') {
+                const mainTopicKey = button.dataset.mainTopicKey;
+                const subTopicKey = button.dataset.subTopicKey;
+                
+                const t = uiStrings[language] || uiStrings.Japanese;
+                const mainTopicText = t.topics[mainTopicKey].text;
+                const subTopicText = t.topics[mainTopicKey].subtopics[subTopicKey];
+                
+                const userMessage = t.iWantToTalkAbout.replace('{topic}', mainTopicText).replace('{subtopic}', subTopicText);
+                
+                addMessageToChat(userMessage, 'user');
+                toggleFormState(true);
+                getAdviceFromAI(userMessage).finally(() => toggleFormState(false));
+                
+                topicModal.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
             }
         });
 
@@ -273,6 +355,7 @@
 
         // --- Main Functions ---
         function showInitialMessage() {
+            const t = uiStrings[language] || uiStrings.Japanese;
             const welcomeMessages = {
                 Japanese: {
                     Keigo: `${userName ? userName + 'さん、' : ''}こんにちは。心の相談室へようこそ。<br><br>どのようなことでも、あなたの気持ちやお悩みをお聞かせください。`,
@@ -347,17 +430,24 @@ ${roleAndStyle}
 # ユーザーからの新しいメッセージ
 ${userMessage}`;
             
+            const model = 'gemini-1.5-flash-latest';
+            const apiKey = "AIzaSyDjQHm_m4OzPM0VrSQxdywqceeqSVuI9bU";
+
             try {
-                const apiKey = "AIzaSyDjQHm_m4OzPM0VrSQxdywqceeqSVuI9bU";
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
                 const payload = { contents: [{ role: "user", parts: [{ text: prompt }] }] };
+                
                 const response = await fetch(apiUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
-                
-                if (!response.ok) throw new Error(`API error: ${response.status}`);
+
+                if (!response.ok) {
+                    const error = new Error(`API error: ${response.status}`);
+                    error.status = response.status;
+                    throw error;
+                }
 
                 const result = await response.json();
                 let adviceText = "申し訳ありません、うまくアドバイスを生成できませんでした。";
@@ -373,7 +463,15 @@ ${userMessage}`;
 
             } catch (error) {
                 console.error("Error fetching advice:", error);
-                const errorMessage = "申し訳ありません、現在AIとの通信に問題が発生しています。時間をおいて再度お試しください。";
+                const t = uiStrings[language] || uiStrings.Japanese;
+                let errorMessage;
+                if (error.status === 429) {
+                    errorMessage = t.rateLimitErrorMessage;
+                } else if (error.status === 503) {
+                    errorMessage = t.reloadErrorMessage;
+                } else {
+                    errorMessage = t.genericErrorMessage;
+                }
                 addMessageToChat(errorMessage, 'ai');
             }
         }
@@ -390,6 +488,18 @@ ${userMessage}`;
             }
             
             addMessageToChat(processedText.replace(/\n/g, '<br>'), 'ai');
+
+            // Set feedback timer if needed
+            const feedbackMinutes = parseInt(feedbackTime, 10);
+            if (feedbackMinutes > 0) {
+                setTimeout(showFollowUpMessage, feedbackMinutes * 60 * 1000);
+            }
+        }
+        
+        function showFollowUpMessage() {
+            const t = uiStrings[language] || uiStrings.Japanese;
+            const message = t.followUpMessage;
+            addMessageToChat(message, 'ai');
         }
 
         // --- Utility Functions ---
@@ -402,46 +512,89 @@ ${userMessage}`;
             document.getElementById('settings-title').innerText = t.settingsTitle;
             document.getElementById('settings-lang-label').innerText = t.settingsLangLabel;
             document.getElementById('settings-style-label').innerText = t.settingsStyleLabel;
+            document.getElementById('settings-feedback-label').innerText = t.settingsFeedbackLabel;
             document.getElementById('close-settings-button').innerText = t.settingsCloseButton;
+            document.getElementById('topic-title').innerText = t.topicTitle;
+            document.getElementById('close-topic-button').innerText = t.topicCancel;
+            document.getElementById('topic-back-button').innerText = t.topicBack;
             document.getElementById('footer-copyright').innerHTML = t.footerCopyright;
             document.getElementById('footer-disclaimer').innerText = t.footerDisclaimer;
             document.documentElement.lang = language.split('-')[0].toLowerCase();
         }
 
         function populateStyleDropdown() {
-            const t = uiStrings[language] || uiStrings.Japanese;
-            styleSelect.innerHTML = ''; // Clear existing options
+            const t = uiStrings.Japanese;
+            styleSelect.innerHTML = '';
             const options = [
                 { value: 'Keigo', text: t.styleKeigo },
                 { value: 'Tameguchi', text: t.styleTameguchi }
             ];
-            
-            options.forEach(opt => {
-                const optionElement = new Option(opt.text, opt.value);
-                styleSelect.add(optionElement);
-            });
-
+            options.forEach(opt => styleSelect.add(new Option(opt.text, opt.value)));
             const dialectGroup = document.createElement('optgroup');
             dialectGroup.label = t.styleDialectGroup;
-            dialects.forEach(pref => {
-                dialectGroup.appendChild(new Option(pref, pref));
-            });
+            dialects.forEach(pref => dialectGroup.appendChild(new Option(pref, pref)));
             styleSelect.add(dialectGroup);
+        }
+        
+        function populateFeedbackDropdown() {
+            const t = uiStrings[language] || uiStrings.Japanese;
+            feedbackSelect.innerHTML = '';
+            const options = [
+                { value: '0', text: t.feedbackOff },
+                { value: '5', text: `5 ${t.minutesSuffix}` },
+                { value: '10', text: `10 ${t.minutesSuffix}` },
+                { value: '30', text: `30 ${t.minutesSuffix}` },
+                { value: '60', text: `1 ${t.hourSuffix}` },
+            ];
+            options.forEach(opt => feedbackSelect.add(new Option(opt.text, opt.value)));
+        }
+
+        function populateMainTopics() {
+            const t = uiStrings[language] || uiStrings.Japanese;
+            topicTitle.innerText = t.topicTitle;
+            topicOptions.innerHTML = '';
+            Object.keys(t.topics).forEach(key => {
+                const button = document.createElement('button');
+                button.className = 'topic-option p-4 rounded-lg border text-center hover:bg-gray-100';
+                button.dataset.action = 'select-main-topic';
+                button.dataset.topicKey = key;
+                button.innerText = t.topics[key].text;
+                topicOptions.appendChild(button);
+            });
+            topicBackButton.classList.add('hidden');
+            closeTopicButton.classList.remove('mt-2');
+        }
+        
+        function populateSubTopics(mainTopicKey) {
+            const t = uiStrings[language] || uiStrings.Japanese;
+            const mainTopic = t.topics[mainTopicKey];
+            topicTitle.innerText = t.topicDetailTitle.replace('{topic}', mainTopic.text);
+            topicOptions.innerHTML = '';
+            Object.keys(mainTopic.subtopics).forEach(key => {
+                const button = document.createElement('button');
+                button.className = 'topic-option p-4 rounded-lg border text-center hover:bg-gray-100';
+                button.dataset.action = 'select-sub-topic';
+                button.dataset.mainTopicKey = mainTopicKey;
+                button.dataset.subTopicKey = key;
+                button.innerText = mainTopic.subtopics[key];
+                topicOptions.appendChild(button);
+            });
+            topicBackButton.classList.remove('hidden');
+            closeTopicButton.classList.add('mt-2');
         }
 
         function updateSettingsUI() {
-            // Update language selection
             document.querySelectorAll('#language-options button').forEach(btn => {
                 btn.classList.toggle('selected', btn.dataset.lang === tempLanguage);
             });
-
-            // Update style selection visibility and state
             if (tempLanguage === 'Japanese') {
                 styleSection.classList.remove('hidden');
                 styleSelect.value = tempStyle;
             } else {
                 styleSection.classList.add('hidden');
             }
+            populateFeedbackDropdown();
+            feedbackSelect.value = tempFeedbackTime;
         }
 
         function toggleFormState(isLoading) {
@@ -449,10 +602,12 @@ ${userMessage}`;
                 loadingIndicator.classList.remove('hidden');
                 chatInput.disabled = true;
                 sendButton.disabled = true;
+                topicButton.disabled = true;
             } else {
                 loadingIndicator.classList.add('hidden');
                 chatInput.disabled = false;
                 sendButton.disabled = false;
+                topicButton.disabled = false;
                 chatInput.focus();
             }
         }
