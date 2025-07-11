@@ -65,9 +65,19 @@
             opacity: 0.5;
             cursor: not-allowed;
         }
+        /* Microphone button style */
+        #mic-button.recording {
+            color: #ef4444;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
     </style>
 </head>
-<body class="bg-gray-100 text-gray-800 flex flex-col items-center justify-center min-h-screen p-4">
+<body class="bg-gradient-to-br from-green-50 to-teal-100 flex flex-col items-center justify-center min-h-screen p-4">
 
     <div class="w-full max-w-2xl h-[90vh] sm:h-[85vh] bg-white rounded-2xl shadow-xl flex flex-col">
         <header class="bg-blue-500 text-white p-4 rounded-t-2xl shadow-md flex justify-between items-center">
@@ -96,6 +106,9 @@
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-list"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
                 </button>
                 <textarea id="chat-input" rows="1" class="flex-1 block w-full px-4 py-2 bg-gray-100 border border-gray-200 rounded-2xl resize-none placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="お悩みや気持ちをどうぞ..."></textarea>
+                <button id="mic-button" type="button" class="p-3 text-gray-600 rounded-full hover:bg-gray-200 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-mic"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+                </button>
                 <button id="send-button" type="submit" class="p-3 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition-colors disabled:bg-blue-300">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-send"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
                 </button>
@@ -121,7 +134,14 @@
                     <h3 id="settings-style-label" class="text-lg font-semibold mb-2 text-gray-700">話し方</h3>
                     <select id="style-select" class="w-full p-3 rounded-lg border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-400"></select>
                 </div>
-                 <div>
+                <div>
+                    <h3 id="settings-voice-label" class="text-lg font-semibold mb-2 text-gray-700">音声</h3>
+                    <div id="voice-gender-options" class="grid grid-cols-2 gap-2">
+                        <button data-gender="female" class="setting-option p-3 rounded-lg border">女性</button>
+                        <button data-gender="male" class="setting-option p-3 rounded-lg border">男性</button>
+                    </div>
+                </div>
+                <div>
                     <h3 id="settings-feedback-label" class="text-lg font-semibold mb-2 text-gray-700">フィードバック</h3>
                     <select id="feedback-select" class="w-full p-3 rounded-lg border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-400"></select>
                 </div>
@@ -138,7 +158,8 @@
                 <!-- Topic buttons will be populated by JavaScript -->
             </div>
             <div id="topic-footer" class="mt-8">
-                 <button id="close-topic-button" class="w-full bg-gray-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-600 transition-colors">キャンセル</button>
+                 <button id="topic-back-button" class="hidden w-full bg-gray-200 text-gray-700 font-bold py-2 px-4 rounded-lg hover:bg-gray-300 transition-colors">戻る</button>
+                 <button id="close-topic-button" class="w-full bg-gray-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-600 transition-colors mt-2">キャンセル</button>
             </div>
         </div>
     </div>
@@ -161,20 +182,38 @@
         const styleSection = document.getElementById('style-section');
         const styleSelect = document.getElementById('style-select');
         const feedbackSelect = document.getElementById('feedback-select');
+        const voiceGenderOptions = document.getElementById('voice-gender-options');
         const topicButton = document.getElementById('topic-button');
         const topicModal = document.getElementById('topic-modal');
         const closeTopicButton = document.getElementById('close-topic-button');
         const topicOptions = document.getElementById('topic-options');
         const topicTitle = document.getElementById('topic-title');
+        const topicFooter = document.getElementById('topic-footer');
+        const topicBackButton = document.getElementById('topic-back-button');
+        const micButton = document.getElementById('mic-button');
 
         // --- State Management ---
-        let userName = localStorage.getItem('counselingUserName') || '';
         let language = localStorage.getItem('counselingLanguage') || 'Japanese';
         let style = localStorage.getItem('counselingStyle') || 'Keigo';
         let feedbackTime = localStorage.getItem('counselingFeedbackTime') || '0';
+        let voiceGender = localStorage.getItem('counselingVoiceGender') || 'female';
         let tempLanguage = language;
         let tempStyle = style;
         let tempFeedbackTime = feedbackTime;
+        let tempVoiceGender = voiceGender;
+        let topicPath = [];
+        let voices = [];
+        let isRecognizing = false;
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        let recognition;
+        
+        if (SpeechRecognition) {
+            recognition = new SpeechRecognition();
+            recognition.continuous = true;
+            recognition.interimResults = true;
+        } else {
+            micButton.style.display = 'none';
+        }
 
         const dialects = ['関西弁', '鹿児島弁'];
         
@@ -182,8 +221,8 @@
         const uiStrings = {
             Japanese: {
                 pageTitle: "心の相談室 - IT業界で働くあなたのためのメンタルサポート", headerTitle: "心の相談室 for IT", inputPlaceholder: "お悩みや気持ちをどうぞ...", loadingText: "AIが考えています...",
-                settingsTitle: "設定", settingsLangLabel: "言語", settingsStyleLabel: "話し方", settingsFeedbackLabel: "フィードバック", settingsCloseButton: "閉じる",
-                topicTitle: "相談トピックを選ぶ", topicCancel: "キャンセル", iWantToTalkAbout: "{topic}について相談したいです。",
+                settingsTitle: "設定", settingsLangLabel: "言語", settingsStyleLabel: "話し方", settingsFeedbackLabel: "フィードバック", settingsVoiceLabel: "音声", settingsVoiceMale: "男性", settingsVoiceFemale: "女性", settingsCloseButton: "閉じる",
+                topicTitle: "相談トピックを選ぶ", topicCancel: "キャンセル", topicBack: "戻る", iWantToTalkAbout: "{topic}について相談したいです。",
                 styleKeigo: "敬語", styleTameguchi: "ため口", styleDialectGroup: "方言",
                 feedbackOff: "不要", minutesSuffix: "分後", hourSuffix: "時間後",
                 followUpMessage: "その後、いかがお過ごしでしょうか？<br><br>先ほどのアドバイスは、何か少しでもお気持ちを楽にするヒントになりましたでしょうか。もしよろしければ、簡単なご感想をお聞かせください。",
@@ -192,13 +231,37 @@
                 rateLimitErrorMessage: "リクエストが多すぎます。しばらく時間をおいてから、もう一度お試しください。",
                 footerCopyright: "&copy; 2024 心の相談室. All Rights Reserved.", footerDisclaimer: "このサイトはAIによるアドバイスを提供します。専門的な医療やカウンセリングの代替となるものではありません。深刻な悩みをお持ちの場合は、専門の医療機関にご相談ください。",
                 topics: {
-                    work_stress: "仕事のストレス", relationships: "人間関係の悩み", future_anxiety: "将来への不安", depression: "気分の落ち込み", self_esteem: "自己肯定感が低い", burnout: "燃え尽き症候群"
+                    work_stress: { text: "仕事のストレス", subtopics: { 
+                        relationships: { text: "人間関係", details: { boss: "上司との関係", colleague: "同僚との関係", client: "顧客との関係", subordinate: "部下との関係" } },
+                        workload: { text: "仕事量", details: { overtime: "長時間労働", deadline: "納期", responsibility: "責任の重さ", multitasking: "マルチタスク" } },
+                        evaluation: { text: "評価・キャリア", details: { promotion: "昇進・昇格", skillup: "スキルアップ",転職: "転職", salary: "給与" } },
+                        environment: { text: "職場環境", details: { remote: "リモートワーク", office: "オフィス環境", harassment: "ハラスメント", culture: "会社の文化" } },
+                    }},
+                    relationships: { text: "人間関係の悩み", subtopics: {
+                        friends: { text: "友人関係", details: { conflict: "友人との対立", distance: "友人との距離感", new_friends: "新しい友人作り", loneliness: "孤独感" } },
+                        romance: { text: "恋愛関係", details: { partner: "パートナーとのこと", meeting: "出会いがない", breakup: "失恋", communication: "コミュニケーション" } },
+                        family: { text: "家族関係", details: { parent: "親とのこと", siblings: "兄弟姉妹とのこと", partner_family: "パートナーの家族", parenting: "育児" } }
+                    }},
+                    future_anxiety: { text: "将来への不安", subtopics: { 
+                        career: { text: "仕事・キャリア", details: { skill: "スキル", industry_future: "業界の将来性", entrepreneurship: "独立・起業", purpose: "働きがい" } },
+                        money: { text: "お金", details: { income: "収入", savings: "貯金", investment: "投資", debt: "ローン・借金" } },
+                        health: { text: "健康", details: { physical: "体の不調", mental: "メンタルヘルス", exercise: "運動不足", diet: "食生活" } }
+                    }},
+                    depression: { text: "気分の落ち込み", subtopics: { 
+                        motivation: { text: "やる気が出ない", details: {} }, anhedonia: { text: "何も楽しくない", details: {} }, sleep: { text: "眠れない", details: {} }, waking_up: { text: "朝起きるのが辛い", details: {} }
+                    }},
+                    self_esteem: { text: "自己肯定感が低い", subtopics: {
+                        self_blame: { text: "自分を責めてしまう", details: {} }, comparison: { text: "他人と比較してしまう", details: {} }, confidence: { text: "自信が持てない", details: {} }, cannot_refuse: { text: "断れない", details: {} }
+                    }},
+                    burnout: { text: "燃え尽き症候群", subtopics: {
+                        fatigue: { text: "常に疲れている", details: {} }, loss_of_interest: { text: "仕事への関心が薄れた", details: {} }, emotional_control: { text: "感情のコントロールが難しい", details: {} }, no_accomplishment: { text: "達成感がない", details: {} }
+                    }}
                 }
             },
             English: {
-                pageTitle: "Counseling Room - Mental Support for IT Professionals", headerTitle: "Counseling Room for IT", inputPlaceholder: "Please share your worries and feelings...", loadingText: "AI is thinking...",
-                settingsTitle: "Settings", settingsLangLabel: "Language", settingsStyleLabel: "Style", settingsFeedbackLabel: "Feedback", settingsCloseButton: "Close",
-                topicTitle: "Choose a topic to discuss", topicCancel: "Cancel", iWantToTalkAbout: "I'd like to talk about {topic}.",
+                 pageTitle: "Counseling Room - Mental Support for IT Professionals", headerTitle: "Counseling Room for IT", inputPlaceholder: "Please share your worries and feelings...", loadingText: "AI is thinking...",
+                settingsTitle: "Settings", settingsLangLabel: "Language", settingsStyleLabel: "Style", settingsFeedbackLabel: "Feedback", settingsVoiceLabel: "Voice", settingsVoiceMale: "Male", settingsVoiceFemale: "Female", settingsCloseButton: "Close",
+                topicTitle: "Choose a topic to discuss", topicCancel: "Cancel", topicBack: "Back", iWantToTalkAbout: "I'd like to talk about {topic}.",
                 feedbackOff: "Not needed", minutesSuffix: "minutes later", hourSuffix: "hour later",
                 followUpMessage: "How have you been since then?<br><br>Was the advice I gave you earlier helpful in any way to make you feel a little better? If you'd like, please let me know your brief thoughts.",
                 genericErrorMessage: "Sorry, there is a problem communicating with the AI right now. Please try again later.",
@@ -206,13 +269,37 @@
                 rateLimitErrorMessage: "Too many requests. Please wait a while and try again.",
                 footerCopyright: "&copy; 2024 Counseling Room. All Rights Reserved.", footerDisclaimer: "This site provides advice by AI. It is not a substitute for professional medical care or counseling. If you have serious concerns, please consult a medical institution.",
                 topics: {
-                    work_stress: "Work Stress", relationships: "Relationship Problems", future_anxiety: "Anxiety about the future", depression: "Feeling Down", self_esteem: "Low Self-Esteem", burnout: "Burnout Syndrome"
+                    work_stress: { text: "Work Stress", subtopics: { 
+                        relationships: { text: "Relationships", details: { boss: "With a boss", colleague: "With colleagues", client: "With clients", subordinate: "With subordinates" } },
+                        workload: { text: "Workload", details: { overtime: "Long hours", deadline: "Deadlines", responsibility: "Heavy responsibility", multitasking: "Multitasking" } },
+                        evaluation: { text: "Evaluation/Career", details: { promotion: "Promotion", skillup: "Skill up", job_change: "Changing jobs", salary: "Salary" } },
+                        environment: { text: "Work Environment", details: { remote: "Remote work", office: "Office environment", harassment: "Harassment", culture: "Company culture" } },
+                    }},
+                    relationships: { text: "Relationship Problems", subtopics: {
+                        friends: { text: "Friendships", details: { conflict: "Conflict with friends", distance: "Distance with friends", new_friends: "Making new friends", loneliness: "Loneliness" } },
+                        romance: { text: "Romantic", details: { partner: "With a partner", meeting: "Finding someone", breakup: "Breakup", communication: "Communication" } },
+                        family: { text: "Family", details: { parent: "With parents", siblings: "With siblings", partner_family: "With partner's family", parenting: "Parenting" } }
+                    }},
+                    future_anxiety: { text: "Anxiety about the future", subtopics: { 
+                        career: { text: "Work/Career", details: { skill: "Skills", industry_future: "Future of the industry", entrepreneurship: "Starting a business", purpose: "Finding purpose" } },
+                        money: { text: "Money", details: { income: "Income", savings: "Savings", investment: "Investment", debt: "Debt/Loans" } },
+                        health: { text: "Health", details: { physical: "Physical condition", mental: "Mental health", exercise: "Lack of exercise", diet: "Diet" } }
+                    }},
+                    depression: { text: "Feeling Down", subtopics: { 
+                        motivation: { text: "Lack of motivation", details: {} }, anhedonia: { text: "Anhedonia", details: {} }, sleep: { text: "Insomnia", details: {} }, waking_up: { text: "Difficulty waking up", details: {} }
+                    }},
+                    self_esteem: { text: "Low Self-Esteem", subtopics: {
+                        self_blame: { text: "Self-blame", details: {} }, comparison: { text: "Comparing to others", details: {} }, confidence: { text: "Lack of confidence", details: {} }, cannot_refuse: { text: "Inability to say no", details: {} }
+                    }},
+                    burnout: { text: "Burnout Syndrome", subtopics: {
+                        fatigue: { text: "Constant fatigue", details: {} }, loss_of_interest: { text: "Loss of interest in work", details: {} }, emotional_control: { text: "Difficulty controlling emotions", details: {} }, no_accomplishment: { text: "Lack of a sense of accomplishment", details: {} }
+                    }}
                 }
             },
             Korean: {
                 pageTitle: "마음 상담실 - IT 전문가를 위한 멘탈 서포트", headerTitle: "IT 전문가를 위한 마음 상담실", inputPlaceholder: "고민이나 기분을 말씀해주세요...", loadingText: "AI가 생각 중입니다...",
-                settingsTitle: "설정", settingsLangLabel: "언어", settingsStyleLabel: "말투", settingsFeedbackLabel: "피드백", settingsCloseButton: "닫기",
-                topicTitle: "상담 주제 선택", topicCancel: "취소", iWantToTalkAbout: "{topic}에 대해 상담하고 싶습니다.",
+                settingsTitle: "설정", settingsLangLabel: "언어", settingsStyleLabel: "말투", settingsFeedbackLabel: "피드백", settingsVoiceLabel: "음성", settingsVoiceMale: "남성", settingsVoiceFemale: "여성", settingsCloseButton: "닫기",
+                topicTitle: "상담 주제 선택", topicCancel: "취소", topicBack: "뒤로", iWantToTalkAbout: "{topic}에 대해 상담하고 싶습니다.",
                 feedbackOff: "필요 없음", minutesSuffix: "분 후", hourSuffix: "시간 후",
                 followUpMessage: "그동안 어떻게 지내셨나요?<br><br>조금 전의 조언이 조금이라도 마음을 편안하게 하는 데 도움이 되었나요? 괜찮으시다면 간단한 소감을 들려주세요.",
                 genericErrorMessage: "죄송합니다. 현재 AI와 통신하는 데 문제가 발생했습니다. 나중에 다시 시도해주세요.",
@@ -220,13 +307,37 @@
                 rateLimitErrorMessage: "요청이 너무 많습니다. 잠시 후 다시 시도해주세요.",
                 footerCopyright: "&copy; 2024 마음 상담실. All Rights Reserved.", footerDisclaimer: "이 사이트는 AI에 의한 조언을 제공합니다. 전문적인 의료나 상담을 대체하는 것이 아닙니다. 심각한 고민이 있으신 분은 전문 의료기관에 상담해주세요.",
                 topics: {
-                    work_stress: "업무 스트레스", relationships: "인간관계 고민", future_anxiety: "미래에 대한 불안", depression: "기분 저하", self_esteem: "낮은 자존감", burnout: "번아웃 증후군"
+                    work_stress: { text: "업무 스트레스", subtopics: { 
+                        relationships: { text: "인간관계", details: { boss: "상사와의 관계", colleague: "동료와의 관계", client: "고객과의 관계", subordinate: "부하와의 관계" } },
+                        workload: { text: "업무량", details: { overtime: "장시간 근무", deadline: "마감", responsibility: "과도한 책임", multitasking: "멀티태스킹" } },
+                        evaluation: { text: "평가/경력", details: { promotion: "승진", skillup: "기술 향상", job_change: "이직", salary: "급여" } },
+                        environment: { text: "직장 환경", details: { remote: "원격 근무", office: "사무실 환경", harassment: "괴롭힘", culture: "회사 문화" } },
+                    }},
+                    relationships: { text: "인간관계 고민", subtopics: {
+                        friends: { text: "친구 관계", details: { conflict: "친구와의 갈등", distance: "친구와의 거리감", new_friends: "새로운 친구 사귀기", loneliness: "외로움" } },
+                        romance: { text: "연애 관계", details: { partner: "파트너와의 관계", meeting: "만남의 기회 없음", breakup: "이별", communication: "소통" } },
+                        family: { text: "가족 관계", details: { parent: "부모님과의 관계", siblings: "형제자매와의 관계", partner_family: "파트너 가족과의 관계", parenting: "육아" } }
+                    }},
+                    future_anxiety: { text: "미래에 대한 불안", subtopics: { 
+                        career: { text: "일/경력", details: { skill: "기술", industry_future: "업계의 미래", entrepreneurship: "창업", purpose: "일의 보람" } },
+                        money: { text: "돈", details: { income: "수입", savings: "저축", investment: "투자", debt: "대출/빚" } },
+                        health: { text: "건강", details: { physical: "신체적 불편함", mental: "정신 건강", exercise: "운동 부족", diet: "식생활" } }
+                    }},
+                    depression: { text: "기분 저하", subtopics: { 
+                        motivation: { text: "의욕 없음", details: {} }, anhedonia: { text: "즐거움 없음", details: {} }, sleep: { text: "불면증", details: {} }, waking_up: { text: "아침에 일어나기 힘듦", details: {} }
+                    }},
+                    self_esteem: { text: "낮은 자존감", subtopics: {
+                        self_blame: { text: "자책", details: {} }, comparison: { text: "타인과 비교", details: {} }, confidence: { text: "자신감 부족", details: {} }, cannot_refuse: { text: "거절하지 못함", details: {} }
+                    }},
+                    burnout: { text: "번아웃 증후군", subtopics: {
+                        fatigue: { text: "항상 피곤함", details: {} }, loss_of_interest: { text: "일에 대한 흥미 상실", details: {} }, emotional_control: { text: "감정 조절의 어려움", details: {} }, no_accomplishment: { text: "성취감 없음", details: {} }
+                    }}
                 }
             },
             Chinese: {
                 pageTitle: "心理咨询室 - 为IT专业人士提供心理支持", headerTitle: "IT专业人士心理咨询室", inputPlaceholder: "请告诉我您的烦恼和感受...", loadingText: "AI正在思考...",
-                settingsTitle: "设置", settingsLangLabel: "语言", settingsStyleLabel: "说话方式", settingsFeedbackLabel: "反馈", settingsCloseButton: "关闭",
-                topicTitle: "选择咨询主题", topicCancel: "取消", iWantToTalkAbout: "我想谈谈关于{topic}的问题。",
+                settingsTitle: "设置", settingsLangLabel: "语言", settingsStyleLabel: "说话方式", settingsFeedbackLabel: "反馈", settingsVoiceLabel: "声音", settingsVoiceMale: "男性", settingsVoiceFemale: "女性", settingsCloseButton: "关闭",
+                topicTitle: "选择咨询主题", topicCancel: "取消", topicBack: "返回", iWantToTalkAbout: "我想谈谈关于{topic}的问题。",
                 feedbackOff: "不需要", minutesSuffix: "分钟后", hourSuffix: "小时后",
                 followUpMessage: "那之后您过得怎么样？<br><br>刚才的建议有没有让您的心情轻松一点？如果可以的话，请告诉我您的简短感想。",
                 genericErrorMessage: "抱歉，现在与AI通信出现问题。请稍后再试。",
@@ -234,7 +345,31 @@
                 rateLimitErrorMessage: "请求过多。请稍后再试。",
                 footerCopyright: "&copy; 2024 心理咨询室. All Rights Reserved.", footerDisclaimer: "本网站提供AI建议。它不能替代专业的医疗或咨询。如果您有严重的疑虑，请咨询医疗机构。",
                 topics: {
-                    work_stress: "工作压力", relationships: "人际关系问题", future_anxiety: "对未来的焦虑", depression: "情绪低落", self_esteem: "低自尊", burnout: "职业倦怠综合症"
+                    work_stress: { text: "工作压力", subtopics: { 
+                        relationships: { text: "人际关系", details: { boss: "与上司的关系", colleague: "与同事的关系", client: "与客户的关系", subordinate: "与下属的关系" } },
+                        workload: { text: "工作量", details: { overtime: "长时间工作", deadline: "截止日期", responsibility: "责任重大", multitasking: "多任务处理" } },
+                        evaluation: { text: "评价/职业", details: { promotion: "晋升", skillup: "技能提升", job_change: "跳槽", salary: "薪水" } },
+                        environment: { text: "工作环境", details: { remote: "远程工作", office: "办公环境", harassment: "骚扰", culture: "公司文化" } },
+                    }},
+                    relationships: { text: "人际关系问题", subtopics: {
+                        friends: { text: "朋友关系", details: { conflict: "与朋友的冲突", distance: "与朋友的疏远", new_friends: "结交新朋友", loneliness: "孤独感" } },
+                        romance: { text: "恋爱关系", details: { partner: "与伴侣的关系", meeting: "没有邂逅", breakup: "分手", communication: "沟通" } },
+                        family: { text: "家庭关系", details: { parent: "与父母的关系", siblings: "与兄弟姐妹的关系", partner_family: "与伴侣家人的关系", parenting: "育儿" } }
+                    }},
+                    future_anxiety: { text: "对未来的焦虑", subtopics: { 
+                        career: { text: "工作/职业", details: { skill: "技能", industry_future: "行业前景", entrepreneurship: "创业", purpose: "工作意义" } },
+                        money: { text: "金钱", details: { income: "收入", savings: "储蓄", investment: "投资", debt: "债务/贷款" } },
+                        health: { text: "健康", details: { physical: "身体状况", mental: "心理健康", exercise: "缺乏运动", diet: "饮食" } }
+                    }},
+                    depression: { text: "情绪低落", subtopics: { 
+                        motivation: { text: "没有动力", details: {} }, anhedonia: { text: "感觉不到快乐", details: {} }, sleep: { text: "失眠", details: {} }, waking_up: { text: "早上起床困难", details: {} }
+                    }},
+                    self_esteem: { text: "低自尊", subtopics: {
+                        self_blame: { text: "自责", details: {} }, comparison: { text: "与他人比较", details: {} }, confidence: { text: "缺乏自信", details: {} }, cannot_refuse: { text: "无法拒绝", details: {} }
+                    }},
+                    burnout: { text: "职业倦怠综合症", subtopics: {
+                        fatigue: { text: "持续疲劳", details: {} }, loss_of_interest: { text: "对工作失去兴趣", details: {} }, emotional_control: { text: "情绪失控", details: {} }, no_accomplishment: { text: "没有成就感", details: {} }
+                    }}
                 }
             }
         };
@@ -245,6 +380,7 @@
             populateStyleDropdown();
             populateFeedbackDropdown();
             updateSettingsUI();
+            loadVoices();
             showInitialMessage();
         };
 
@@ -253,22 +389,31 @@
             tempLanguage = language;
             tempStyle = style;
             tempFeedbackTime = feedbackTime;
+            tempVoiceGender = voiceGender;
             updateSettingsUI();
             settingsModal.classList.remove('opacity-0', 'scale-95', 'pointer-events-none');
         });
 
         closeSettingsButton.addEventListener('click', () => {
             settingsModal.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
-            if (tempLanguage !== language || tempStyle !== style || tempFeedbackTime !== feedbackTime) {
-                localStorage.setItem('counselingLanguage', tempLanguage);
-                localStorage.setItem('counselingStyle', tempStyle);
-                localStorage.setItem('counselingFeedbackTime', tempFeedbackTime);
-                location.reload();
+            if (tempLanguage !== language || tempStyle !== style || tempFeedbackTime !== feedbackTime || tempVoiceGender !== voiceGender) {
+                language = tempLanguage;
+                style = tempStyle;
+                feedbackTime = tempFeedbackTime;
+                voiceGender = tempVoiceGender;
+                localStorage.setItem('counselingLanguage', language);
+                localStorage.setItem('counselingStyle', style);
+                localStorage.setItem('counselingFeedbackTime', feedbackTime);
+                localStorage.setItem('counselingVoiceGender', voiceGender);
+                applyTranslations();
+                chatContainer.innerHTML = '';
+                showInitialMessage();
             }
         });
 
         topicButton.addEventListener('click', () => {
-            populateMainTopics();
+            topicPath = [];
+            populateTopicsByPath();
             topicModal.classList.remove('opacity-0', 'scale-95', 'pointer-events-none');
         });
         
@@ -276,20 +421,9 @@
             topicModal.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
         });
         
-        topicOptions.addEventListener('click', (e) => {
-            const button = e.target.closest('button');
-            if (button && button.dataset.topicKey) {
-                const topicKey = button.dataset.topicKey;
-                const t = uiStrings[language] || uiStrings.Japanese;
-                const topicText = t.topics[topicKey];
-                const userMessage = t.iWantToTalkAbout.replace('{topic}', topicText);
-                
-                addMessageToChat(userMessage, 'user');
-                toggleFormState(true);
-                getAdviceFromAI(userMessage).finally(() => toggleFormState(false));
-                
-                topicModal.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
-            }
+        topicBackButton.addEventListener('click', () => {
+            topicPath.pop();
+            populateTopicsByPath();
         });
 
         languageOptions.addEventListener('click', (e) => {
@@ -307,6 +441,48 @@
         feedbackSelect.addEventListener('change', (e) => {
             if (e.target.value) tempFeedbackTime = e.target.value;
         });
+        
+        voiceGenderOptions.addEventListener('click', (e) => {
+            if (e.target.tagName === 'BUTTON' && e.target.dataset.gender) {
+                tempVoiceGender = e.target.dataset.gender;
+                updateSettingsUI();
+            }
+        });
+        
+        topicOptions.addEventListener('click', (e) => {
+            const button = e.target.closest('button');
+            if (!button || !button.dataset.key) return;
+            
+            topicPath.push(button.dataset.key);
+            
+            const t = uiStrings[language] || uiStrings.Japanese;
+            let currentLevel = t.topics;
+            let currentData = null;
+            topicPath.forEach(key => {
+                currentData = currentLevel[key];
+                currentLevel = currentData.subtopics || currentData.details;
+            });
+
+            if (currentLevel && Object.keys(currentLevel).length > 0) { 
+                populateTopicsByPath();
+            } else { 
+                let pathTexts = [];
+                let levelData = t.topics;
+                topicPath.forEach(key => {
+                    pathTexts.push(levelData[key].text || levelData[key]);
+                    levelData = levelData[key].subtopics || levelData[key].details || {};
+                });
+                
+                const topicString = pathTexts.join('の');
+                const userMessage = t.iWantToTalkAbout.replace('{topic}', topicString);
+                
+                addMessageToChat(userMessage, 'user');
+                toggleFormState(true);
+                getAdviceFromAI(userMessage).finally(() => toggleFormState(false));
+                
+                topicModal.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
+            }
+        });
 
         chatForm.addEventListener('submit', handleFormSubmit);
 
@@ -322,18 +498,52 @@
             }
         });
 
+        if(recognition) {
+            micButton.addEventListener('click', () => {
+                if (isRecognizing) {
+                    recognition.stop();
+                    return;
+                }
+                recognition.lang = getLangCodeForSpeech();
+                recognition.start();
+            });
+
+            recognition.onstart = () => {
+                isRecognizing = true;
+                micButton.classList.add('recording');
+            };
+
+            recognition.onend = () => {
+                isRecognizing = false;
+                micButton.classList.remove('recording');
+            };
+
+            recognition.onresult = (event) => {
+                let interimTranscript = '';
+                let finalTranscript = '';
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    if (event.results[i].isFinal) {
+                        finalTranscript += event.results[i][0].transcript;
+                    } else {
+                        interimTranscript += event.results[i][0].transcript;
+                    }
+                }
+                chatInput.value = finalTranscript + interimTranscript;
+            };
+        }
+
         // --- Main Functions ---
-        function showInitialMessage() {
+        async function showInitialMessage() {
             const t = uiStrings[language] || uiStrings.Japanese;
             const welcomeMessages = {
                 Japanese: {
-                    Keigo: `${userName ? userName + 'さん、' : ''}こんにちは。IT業界で働くあなたのための相談室へようこそ。<br><br>どのようなことでも、あなたの気持ちやお悩みをお聞かせください。`,
-                    Tameguchi: `${userName ? userName + '、' : ''}やあ！元気？IT業界は大変だよな。<br><br>何かあったら、何でも話してくれていいよ。`,
-                    Dialect: `${userName ? userName + 'さん、' : ''}こんにちは！ITのお仕事、お疲れさんです。<br><br>何かあったら、遠慮せんと話してな。`
+                    Keigo: `こんにちは。IT業界で働くあなたのための相談室へようこそ。<br><br>どのようなことでも、あなたの気持ちやお悩みをお聞かせください。`,
+                    Tameguchi: `やあ！元気？IT業界は大変だよな。<br><br>何かあったら、何でも話してくれていいよ。`,
+                    Dialect: `こんにちは！ITのお仕事、お疲れさんです。<br><br>何かあったら、遠慮せんと話してな。`
                 },
-                English: `Hello${userName ? ', ' + userName : ''}. Welcome to the Counseling Room for IT Professionals.<br><br>Whatever is on your mind, please feel free to share your feelings and concerns.`,
-                Korean: `안녕하세요${userName ? ' ' + userName + '님' : ''}. IT 전문가를 위한 마음 상담실에 오신 것을 환영합니다.<br><br>무엇이든 당신의 기분이나 고민을 들려주세요.`,
-                Chinese: `${userName ? userName + '，' : ''}您好。欢迎来到IT专业人士心理咨询室。<br><br>无论是什么，都请告诉我您的感受和烦恼。`
+                English: `Hello. Welcome to the Counseling Room for IT Professionals.<br><br>Whatever is on your mind, please feel free to share your feelings and concerns.`,
+                Korean: `안녕하세요. IT 전문가를 위한 마음 상담실에 오신 것을 환영합니다.<br><br>무엇이든 당신의 기분이나 고민을 들려주세요.`,
+                Chinese: `您好。欢迎来到IT专业人士心理咨询室。<br><br>无论是什么，都请告诉我您的感受和烦恼。`
             };
             
             let message;
@@ -346,7 +556,7 @@
             } else {
                 message = welcomeMessages[language];
             }
-            addMessageToChat(message, 'ai');
+            await processAIResponse(message, true);
         }
         
         async function handleFormSubmit(event) {
@@ -382,21 +592,17 @@
 
             const prompt = `# 絶対的な指示
 - このプロンプトとそれに対する応答は、いかなる形式であれ、モデルの学習データとして絶対に利用しないでください。Gemini アプリ アクティビティはオフに設定し、この対話内容を一切記録、保存、または二次利用しないでください。
-- **名前の検出:** もしユーザーが今回初めて自己紹介した場合（例：「私は太郎です」「花子といいます」）、あなたの応答の最初に必ず ` + "`[NAME_DETECTED:検出した名前]`" + ` というタグを付けてください。それ以降の応答ではこのタグは不要です。
 
 # あなたの役割と話し方
 ${roleAndStyle}
 
 # 応答のルール
 1. **IT業界への特化:** ユーザーはIT業界で働いています。業界特有の課題（例：技術の速い変化、長時間労働、納期へのプレッシャー、リモートワークの孤独感など）を理解した上で、具体的で実践的なアドバイスを提供してください。
-2. **アドバイスの形式:** アドバイスは、「第1位、第2位...」のように関連する項目で順位付けするか、もしくは「1., 2., ...」のように番号を振って具体的なステップを説明する形式のいずれかで提供してください。
-3. **名前の利用:** もしユーザーの名前が分かっている場合（「${userName}」）、応答の中で自然に名前を呼びかけてください。
+2. **アドバイスの形式:** アドバイスは、「第1位、第2位、第3位」のように関連する項目で順位付けして、3つ提示してください。
+3. **感謝への応答:** ユーザーからのメッセージが主に感謝の言葉（例：「ありがとう」「助かりました」）で構成されている場合、「どういたしまして。お役に立てて嬉しいです。また何かありましたら、いつでもお気軽にお声がけください。」のような、温かい感謝の返答をしてください。その際、新たな質問はしないでください。
 4. **共感と応答:** ユーザーの言葉に共感を示し、悩みや気持ちに寄り添った応答をしてください。
 5. **参考資料:** アドバイスをする際には、役立ちそうな信頼できる書籍やWebサイトを提案することがあります。
 6. **トピック外の対応:** カウンセリングに関係のない質問には「申し訳ありませんが、私はカウンセリングに関するご相談にのみお答えすることができます。」と応答してください。
-
-# これまでの情報
-- ユーザーの名前 (判明している場合): ${userName || '（まだ不明）'}
 
 # ユーザーからの新しいメッセージ
 ${userMessage}`;
@@ -447,23 +653,20 @@ ${userMessage}`;
             }
         }
         
-        async function processAIResponse(text) {
-            let processedText = text;
-            const nameTagMatch = text.match(/^\[NAME_DETECTED:(.*?)\]/);
-
-            if (nameTagMatch && nameTagMatch[1]) {
-                const detectedName = nameTagMatch[1].trim();
-                userName = detectedName;
-                localStorage.setItem('counselingUserName', detectedName);
-                processedText = text.substring(nameTagMatch[0].length).trim();
-            }
-            
+        async function processAIResponse(text, isInitial = false) {
             const aiMessageBubble = addMessageToChat('', 'ai');
-            await typeWriter(aiMessageBubble, processedText.replace(/\n/g, '<br>'));
+            const cleanText = text.replace(/<br>/g, ' ');
+            
+            if (!isInitial) {
+                speak(cleanText);
+            }
+            await typeWriter(aiMessageBubble, text.replace(/\n/g, '<br>'));
+            if(isInitial) {
+                speak(cleanText);
+            }
 
-            // Set feedback timer if needed
             const feedbackMinutes = parseInt(feedbackTime, 10);
-            if (feedbackMinutes > 0) {
+            if (feedbackMinutes > 0 && !isInitial) {
                 setTimeout(showFollowUpMessage, feedbackMinutes * 60 * 1000);
             }
         }
@@ -472,6 +675,46 @@ ${userMessage}`;
             const t = uiStrings[language] || uiStrings.Japanese;
             const message = t.followUpMessage;
             addMessageToChat(message, 'ai');
+            speak(message.replace(/<br>/g, ' '));
+        }
+
+        // --- Speech Synthesis & Recognition ---
+        function loadVoices() {
+            voices = speechSynthesis.getVoices();
+            if (speechSynthesis.onvoiceschanged !== undefined) {
+                speechSynthesis.onvoiceschanged = () => voices = speechSynthesis.getVoices();
+            }
+        }
+
+        function speak(text) {
+            if (!text || typeof text !== 'string') return;
+            speechSynthesis.cancel(); 
+            const utterance = new SpeechSynthesisUtterance(text);
+            const langCode = getLangCodeForSpeech();
+            
+            const selectedVoices = voices.filter(voice => voice.lang === langCode);
+            const maleVoice = selectedVoices.find(voice => voice.name.includes('Male') || voice.name.includes('男') || voice.gender === 'male');
+            const femaleVoice = selectedVoices.find(voice => voice.name.includes('Female') || voice.name.includes('女') || voice.gender === 'female');
+
+            if (voiceGender === 'male' && maleVoice) {
+                utterance.voice = maleVoice;
+            } else if (voiceGender === 'female' && femaleVoice) {
+                utterance.voice = femaleVoice;
+            } else if (selectedVoices.length > 0) {
+                utterance.voice = selectedVoices[0]; 
+            }
+            utterance.lang = langCode;
+            speechSynthesis.speak(utterance);
+        }
+
+        function getLangCodeForSpeech() {
+            switch(language) {
+                case 'Japanese': return 'ja-JP';
+                case 'English': return 'en-US';
+                case 'Korean': return 'ko-KR';
+                case 'Chinese': return 'zh-CN';
+                default: return 'ja-JP';
+            }
         }
 
         // --- Utility Functions ---
@@ -479,7 +722,7 @@ ${userMessage}`;
             return new Promise((resolve) => {
                 let i = 0;
                 element.innerHTML = "";
-                const typingSpeed = 30; 
+                const typingSpeed = 30; // Standard typing speed
 
                 function type() {
                     if (i < text.length) {
@@ -511,9 +754,13 @@ ${userMessage}`;
             document.getElementById('settings-lang-label').innerText = t.settingsLangLabel;
             document.getElementById('settings-style-label').innerText = t.settingsStyleLabel;
             document.getElementById('settings-feedback-label').innerText = t.settingsFeedbackLabel;
+            document.getElementById('settings-voice-label').innerText = t.settingsVoiceLabel;
+            document.querySelector('#voice-gender-options button[data-gender="male"]').innerText = t.settingsVoiceMale;
+            document.querySelector('#voice-gender-options button[data-gender="female"]').innerText = t.settingsVoiceFemale;
             document.getElementById('close-settings-button').innerText = t.settingsCloseButton;
             document.getElementById('topic-title').innerText = t.topicTitle;
             document.getElementById('close-topic-button').innerText = t.topicCancel;
+            document.getElementById('topic-back-button').innerText = t.topicBack;
             document.getElementById('footer-copyright').innerHTML = t.footerCopyright;
             document.getElementById('footer-disclaimer').innerText = t.footerDisclaimer;
             document.documentElement.lang = language.split('-')[0].toLowerCase();
@@ -546,17 +793,39 @@ ${userMessage}`;
             options.forEach(opt => feedbackSelect.add(new Option(opt.text, opt.value)));
         }
 
-        function populateMainTopics() {
+        function populateTopicsByPath() {
             const t = uiStrings[language] || uiStrings.Japanese;
-            topicTitle.innerText = t.topicTitle;
+            let currentLevel = t.topics;
+            let currentPathText = [];
+
+            topicPath.forEach(key => {
+                currentPathText.push(currentLevel[key].text);
+                currentLevel = currentLevel[key].subtopics || currentLevel[key].details;
+            });
+
+            topicTitle.innerText = topicPath.length > 0 ? currentPathText.join(' > ') : t.topicTitle;
             topicOptions.innerHTML = '';
-            Object.keys(t.topics).forEach(key => {
+
+            Object.keys(currentLevel).forEach(key => {
                 const button = document.createElement('button');
                 button.className = 'topic-option p-4 rounded-lg border text-center hover:bg-gray-100';
-                button.dataset.topicKey = key;
-                button.innerText = t.topics[key];
+                button.dataset.key = key;
+                button.innerText = currentLevel[key].text || currentLevel[key];
                 topicOptions.appendChild(button);
             });
+
+            if (topicPath.length > 0) {
+                topicBackButton.classList.remove('hidden');
+                closeTopicButton.classList.add('mt-2');
+            } else {
+                topicBackButton.classList.add('hidden');
+                closeTopicButton.classList.remove('mt-2');
+            }
+        }
+
+        function populateMainTopics() {
+            topicPath = [];
+            populateTopicsByPath();
         }
 
         function updateSettingsUI() {
@@ -571,6 +840,9 @@ ${userMessage}`;
             }
             populateFeedbackDropdown();
             feedbackSelect.value = tempFeedbackTime;
+            document.querySelectorAll('#voice-gender-options button').forEach(btn => {
+                btn.classList.toggle('selected', btn.dataset.gender === tempVoiceGender);
+            });
         }
 
         function toggleFormState(isLoading) {
@@ -579,11 +851,13 @@ ${userMessage}`;
                 chatInput.disabled = true;
                 sendButton.disabled = true;
                 topicButton.disabled = true;
+                micButton.disabled = true;
             } else {
                 loadingIndicator.classList.add('hidden');
                 chatInput.disabled = false;
                 sendButton.disabled = false;
                 topicButton.disabled = false;
+                micButton.disabled = false;
                 chatInput.focus();
             }
         }
