@@ -538,13 +538,13 @@ ${adviceRule}
 # ユーザーからの新しいメッセージ
 ${userMessage}`;
             
-            let chatHistory = [];
-            chatHistory.push({ role: "user", parts: [{ text: prompt }] });
-            const payload = { contents: chatHistory };
-            const apiKey = "" // If you want to use models other than gemini-2.0-flash or imagen-3.0-generate-002, provide an API key here. Otherwise, leave this as-is.
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+            const model = 'gemini-1.5-flash-latest';
+            const apiKey = "AIzaSyDjQHm_m4OzPM0VrSQxdywqceeqSVuI9bU";
 
             try {
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+                const payload = { contents: [{ role: "user", parts: [{ text: prompt }] }] };
+                
                 const response = await fetch(apiUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -560,9 +560,7 @@ ${userMessage}`;
                 const result = await response.json();
                 let adviceText = "申し訳ありません、うまくアドバイスを生成できませんでした。";
                 
-                if (result.candidates && result.candidates.length > 0 &&
-                    result.candidates[0].content && result.candidates[0].content.parts &&
-                    result.candidates[0].content.parts.length > 0) {
+                if (result.candidates?.[0]?.content?.parts?.[0]?.text) {
                     adviceText = result.candidates[0].content.parts[0].text;
                 } else if (result.promptFeedback?.blockReason) {
                     console.warn(`Prompt blocked due to: ${result.promptFeedback.blockReason}`);
