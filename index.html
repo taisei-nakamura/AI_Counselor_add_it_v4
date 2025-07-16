@@ -399,7 +399,7 @@
         topicButton.addEventListener('click', () => {
             displayTopicsInChat();
         });
-
+        
         languageOptions.addEventListener('click', (e) => {
             if (e.target.tagName === 'BUTTON' && e.target.dataset.lang) {
                 tempLanguage = e.target.dataset.lang;
@@ -431,16 +431,8 @@
         chatContainer.addEventListener('click', (e) => {
             const button = e.target.closest('.topic-chat-button');
             if (button && button.dataset.message) {
-                // Remove the topic buttons after selection
-                const buttonContainer = button.parentElement;
-                if(buttonContainer) {
-                    buttonContainer.remove();
-                }
-
-                const userMessage = button.dataset.message;
-                addMessageToChat(userMessage, 'user');
-                toggleFormState(true);
-                getAdviceFromAI(userMessage).finally(() => toggleFormState(false));
+                button.parentElement.remove();
+                handleFormSubmit(null, button.dataset.message);
             }
         });
 
@@ -485,13 +477,15 @@
             await processAIResponse(message, true);
         }
         
-        async function handleFormSubmit(event) {
+        async function handleFormSubmit(event, messageFromTopic = null) {
             if(event) event.preventDefault();
-            const userMessage = chatInput.value.trim();
+            const userMessage = messageFromTopic || chatInput.value.trim();
             if (!userMessage) return;
             addMessageToChat(userMessage, 'user');
-            chatInput.value = '';
-            chatInput.style.height = 'auto';
+            if(!messageFromTopic) {
+                chatInput.value = '';
+                chatInput.style.height = 'auto';
+            }
             toggleFormState(true);
             await getAdviceFromAI(userMessage);
             toggleFormState(false);
