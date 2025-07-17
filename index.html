@@ -119,7 +119,7 @@
                 </div>
                 <div id="style-section" class="hidden">
                     <h3 id="settings-style-label" class="text-lg font-semibold mb-2 text-gray-700">話し方</h3>
-                    <select id="style-select" class="w-full p-3 rounded-lg border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-400"></select>
+                    <div id="style-options" class="grid grid-cols-2 gap-2"></div>
                 </div>
                 <div>
                     <h3 id="settings-advice-label" class="text-lg font-semibold mb-2 text-gray-700">アドバイスの種類</h3>
@@ -144,19 +144,20 @@
         </div>
     </div>
 
-    <!-- Topic Modal -->
-    <div id="topic-modal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 opacity-0 transform scale-95 pointer-events-none">
-        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
-            <h2 id="topic-title" class="text-xl font-bold mb-4 text-gray-800">相談トピックを選ぶ</h2>
-            <div id="topic-options" class="grid grid-cols-2 gap-3">
-                <!-- Topic buttons will be populated by JavaScript -->
-            </div>
-            <div id="topic-footer" class="mt-8">
-                 <button id="topic-back-button" class="hidden w-full bg-gray-200 text-gray-700 font-bold py-2 px-4 rounded-lg hover:bg-gray-300 transition-colors">戻る</button>
-                 <button id="close-topic-button" class="w-full bg-gray-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-600 transition-colors mt-2">キャンセル</button>
-            </div>
-        </div>
-    </div>
+    <!-- Topic Modal --> <footer class="w-full max-w-2xl text-center text-xs text-gray-400 mt-4 px-4">
+<div id="topic-modal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 opacity-0 transform scale-95 pointer-events-none">
+<div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
+<h2 id="topic-title" class="text-xl font-bold mb-4 text-gray-800">相談トピックを選ぶ</h2>
+<div id="topic-options" class="grid grid-cols-2 gap-3">
+<!-- Topic buttons will be populated by JavaScript -->
+</div>
+<div id="topic-footer" class="mt-8">
+<button id="topic-back-button" class="hidden w-full bg-gray-200 text-gray-700 font-bold py-2 px-4 rounded-lg hover:bg-gray-300 transition-colors">戻る</button>
+<button id="close-topic-button" class="w-full bg-gray-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-600 transition-colors mt-2">キャンセル</button>
+</div>
+</div>
+</div>
+
 
     <footer class="w-full max-w-2xl text-center text-xs text-gray-400 mt-4 px-4">
         <p id="footer-copyright">&copy; 2024 心の相談室. All Rights Reserved.</p>
@@ -174,18 +175,12 @@
         const closeSettingsButton = document.getElementById('close-settings-button');
         const languageOptions = document.getElementById('language-options');
         const styleSection = document.getElementById('style-section');
-        const styleSelect = document.getElementById('style-select');
+        const styleOptionsContainer = document.getElementById('style-options');
         const feedbackSelect = document.getElementById('feedback-select');
         const voiceToggleButton = document.getElementById('voice-toggle-button');
         const voiceToggleHandle = document.getElementById('voice-toggle-handle');
         const adviceDetailOptions = document.getElementById('advice-detail-options');
         const topicButton = document.getElementById('topic-button');
-        const topicModal = document.getElementById('topic-modal');
-        const closeTopicButton = document.getElementById('close-topic-button');
-        const topicOptions = document.getElementById('topic-options');
-        const topicTitle = document.getElementById('topic-title');
-        const topicFooter = document.getElementById('topic-footer');
-        const topicBackButton = document.getElementById('topic-back-button');
 
         // --- State Management ---
         let language = localStorage.getItem('counselingLanguage') || 'Japanese';
@@ -198,160 +193,71 @@
         let tempFeedbackTime = feedbackTime;
         let tempVoiceEnabled = voiceEnabled;
         let tempAdviceDetail = adviceDetail;
-        let topicPath = [];
         let voices = [];
 
-        const dialects = ['関西弁', '鹿児島弁'];
+        const dialects = ['大阪弁', '鹿児島弁'];
         
         // --- UI Text and Topic Translations ---
         const uiStrings = {
             Japanese: {
                 pageTitle: "心の相談室 - IT業界で働くあなたのためのメンタルサポート", headerTitle: "心の相談室 for IT", inputPlaceholder: "お悩みや気持ちをどうぞ...", loadingText: "AIが考えています...",
                 settingsTitle: "設定", settingsLangLabel: "言語", settingsStyleLabel: "話し方", settingsFeedbackLabel: "フィードバック", settingsVoiceLabel: "音声読み上げ", settingsAdviceDetailLabel: "アドバイスの種類", adviceDetailed: "詳細", adviceSimple: "単純", settingsCloseButton: "閉じる",
-                topicTitle: "相談トピックを選ぶ", topicCancel: "キャンセル", topicBack: "戻る", iWantToTalkAbout: "{topic}について相談したいです。",
-                styleKeigo: "敬語", styleTameguchi: "ため口", styleDialectGroup: "方言",
-                feedbackOff: "不要", minutesSuffix: "分後", hourSuffix: "時間後",
+                topicTitle: "どのようなことについて相談しますか？", iWantToTalkAbout: "{topic}について相談したいです。",
+                styleKeigo: "敬語", styleTameguchi: "ため口"
+               ,feedbackOff: "不要", minutesSuffix: "分後", hourSuffix: "時間後",
                 followUpMessage: "その後、いかがお過ごしでしょうか？<br><br>先ほどのアドバイスは、何か少しでもお気持ちを楽にするヒントになりましたでしょうか。もしよろしければ、簡単なご感想をお聞かせください。",
                 genericErrorMessage: "申し訳ありません、現在AIとの通信に問題が発生しています。時間をおいて再度お試しください。",
                 reloadErrorMessage: "サーバーが混み合っているようです。お手数ですが、ページを再読み込みしてお試しください。",
                 rateLimitErrorMessage: "リクエストが多すぎます。しばらく時間をおいてから、もう一度お試しください。",
+                downloadSummary: "WLS部に連携する",
                 footerCopyright: "&copy; 2024 心の相談室. All Rights Reserved.", footerDisclaimer: "このサイトはAIによるアドバイスを提供します。専門的な医療やカウンセリングの代替となるものではありません。深刻な悩みをお持ちの場合は、専門の医療機関にご相談ください。",
                 topics: {
-                    work_stress: { text: "仕事のストレス", subtopics: { 
-                        relationships: { text: "人間関係", details: { boss: "上司との関係", colleague: "同僚との関係", client: "顧客との関係", subordinate: "部下との関係" } },
-                        workload: { text: "仕事量", details: { overtime: "長時間労働", deadline: "納期", responsibility: "責任の重さ", multitasking: "マルチタスク" } },
-                        evaluation: { text: "評価・キャリア", details: { promotion: "昇進・昇格", skillup: "スキルアップ",転職: "転職", salary: "給与" } },
-                        environment: { text: "職場環境", details: { remote: "リモートワーク", office: "オフィス環境", harassment: "ハラスメント", culture: "会社の文化" } },
-                    }},
-                    relationships: { text: "人間関係の悩み", subtopics: {
-                        friends: { text: "友人関係", details: { conflict: "友人との対立", distance: "友人との距離感", new_friends: "新しい友人作り", loneliness: "孤独感" } },
-                        romance: { text: "恋愛関係", details: { partner: "パートナーとのこと", meeting: "出会いがない", breakup: "失恋", communication: "コミュニケーション" } },
-                        family: { text: "家族関係", details: { parent: "親とのこと", siblings: "兄弟姉妹とのこと", partner_family: "パートナーの家族", parenting: "育児" } }
-                    }},
-                    technical_issues: { text: "技術的な悩み", subtopics: {
-                        development: { text: "開発プロセス", details: { design: "設計", code_review: "コードレビュー", debugging: "デバッグ", testing: "テスト" } },
-                        programming: { text: "プログラミング", details: { new_language: "新しい言語の学習", library: "ライブラリ/FW", algorithm: "アルゴリズム", performance: "パフォーマンス" } },
-                        infrastructure: { text: "インフラ・設定", details: { environment: "環境構築", deployment: "デプロイ", cloud: "クラウドサービス", security: "セキュリティ" } }
-                    }},
-                    future_anxiety: { text: "将来への不安", subtopics: { 
-                        career: { text: "仕事・キャリア", details: { skill: "スキル", industry_future: "業界の将来性", entrepreneurship: "独立・起業", purpose: "働きがい" } },
-                        money: { text: "お金", details: { income: "収入", savings: "貯金", investment: "投資", debt: "ローン・借金" } },
-                        health: { text: "健康", details: { physical: "体の不調", mental: "メンタルヘルス", exercise: "運動不足", diet: "食生活" } }
-                    }},
-                    burnout: { text: "燃え尽き症候群", subtopics: {
-                        fatigue: { text: "常に疲れている", details: {} }, loss_of_interest: { text: "仕事への関心が薄れた", details: {} }, emotional_control: { text: "感情のコントロールが難しい", details: {} }, no_accomplishment: { text: "達成感がない", details: {} }
-                    }}
+                    work_stress: "仕事のストレス", relationships: "人間関係の悩み", future_anxiety: "将来への不安", depression: "気分の落ち込み", self_esteem: "自己肯定感が低い", burnout: "燃え尽き症候群"
                 }
             },
             English: {
                  pageTitle: "Counseling Room - Mental Support for IT Professionals", headerTitle: "Counseling Room for IT", inputPlaceholder: "Please share your worries and feelings...", loadingText: "AI is thinking...",
                 settingsTitle: "Settings", settingsLangLabel: "Language", settingsStyleLabel: "Style", settingsFeedbackLabel: "Feedback", settingsVoiceLabel: "Voice Read-out", settingsAdviceDetailLabel: "Advice Detail", adviceDetailed: "Detailed", adviceSimple: "Simple", settingsCloseButton: "Close",
-                topicTitle: "Choose a topic to discuss", topicCancel: "Cancel", topicBack: "Back", iWantToTalkAbout: "I'd like to talk about {topic}.",
+                topicTitle: "What would you like to talk about?", iWantToTalkAbout: "I'd like to talk about {topic}.",
                 feedbackOff: "Not needed", minutesSuffix: "minutes later", hourSuffix: "hour later",
                 followUpMessage: "How have you been since then?<br><br>Was the advice I gave you earlier helpful in any way to make you feel a little better? If you'd like, please let me know your brief thoughts.",
                 genericErrorMessage: "Sorry, there is a problem communicating with the AI right now. Please try again later.",
                 reloadErrorMessage: "The server seems to be busy. Please reload the page and try again.",
                 rateLimitErrorMessage: "Too many requests. Please wait a while and try again.",
+                downloadSummary: "Share with WLS Dept.",
                 footerCopyright: "&copy; 2024 Counseling Room. All Rights Reserved.", footerDisclaimer: "This site provides advice by AI. It is not a substitute for professional medical care or counseling. If you have serious concerns, please consult a medical institution.",
                 topics: {
-                    work_stress: { text: "Work Stress", subtopics: { 
-                        relationships: { text: "Relationships", details: { boss: "With a boss", colleague: "With colleagues", client: "With clients", subordinate: "With subordinates" } },
-                        workload: { text: "Workload", details: { overtime: "Long hours", deadline: "Deadlines", responsibility: "Heavy responsibility", multitasking: "Multitasking" } },
-                        evaluation: { text: "Evaluation/Career", details: { promotion: "Promotion", skillup: "Skill up", job_change: "Changing jobs", salary: "Salary" } },
-                        environment: { text: "Work Environment", details: { remote: "Remote work", office: "Office environment", harassment: "Harassment", culture: "Company culture" } },
-                    }},
-                    relationships: { text: "Relationship Problems", subtopics: {
-                        friends: { text: "Friendships", details: { conflict: "Conflict with friends", distance: "Distance with friends", new_friends: "Making new friends", loneliness: "Loneliness" } },
-                        romance: { text: "Romantic", details: { partner: "With a partner", meeting: "Finding someone", breakup: "Breakup", communication: "Communication" } },
-                        family: { text: "Family", details: { parent: "With parents", siblings: "With siblings", partner_family: "With partner's family", parenting: "Parenting" } }
-                    }},
-                    technical_issues: { text: "Technical Issues", subtopics: {
-                        development: { text: "Development Process", details: { design: "Design", code_review: "Code Review", debugging: "Debugging", testing: "Testing" } },
-                        programming: { text: "Programming", details: { new_language: "Learning a new language", library: "Library/Framework", algorithm: "Algorithm", performance: "Performance" } },
-                        infrastructure: { text: "Infrastructure/Config", details: { environment: "Environment Setup", deployment: "Deployment", cloud: "Cloud Services", security: "Security" } }
-                    }},
-                    future_anxiety: { text: "Anxiety about the future", subtopics: { 
-                        career: { text: "Work/Career", details: { skill: "Skills", industry_future: "Future of the industry", entrepreneurship: "Starting a business", purpose: "Finding purpose" } },
-                        money: { text: "Money", details: { income: "Income", savings: "Savings", investment: "Investment", debt: "Debt/Loans" } },
-                        health: { text: "Health", details: { physical: "Physical condition", mental: "Mental health", exercise: "Lack of exercise", diet: "Diet" } }
-                    }},
-                    burnout: { text: "Burnout Syndrome", subtopics: {
-                        fatigue: { text: "Constant fatigue", details: {} }, loss_of_interest: { text: "Loss of interest in work", details: {} }, emotional_control: { text: "Difficulty controlling emotions", details: {} }, no_accomplishment: { text: "Lack of a sense of accomplishment", details: {} }
-                    }}
+                    work_stress: "Work Stress", relationships: "Relationship Problems", future_anxiety: "Anxiety about the future", depression: "Feeling Down", self_esteem: "Low Self-Esteem", burnout: "Burnout Syndrome"
                 }
             },
             Korean: {
                 pageTitle: "마음 상담실 - IT 전문가를 위한 멘탈 서포트", headerTitle: "IT 전문가를 위한 마음 상담실", inputPlaceholder: "고민이나 기분을 말씀해주세요...", loadingText: "AI가 생각 중입니다...",
                 settingsTitle: "설정", settingsLangLabel: "언어", settingsStyleLabel: "말투", settingsFeedbackLabel: "피드백", settingsVoiceLabel: "음성 읽어주기", settingsAdviceDetailLabel: "조언 상세 수준", adviceDetailed: "상세", adviceSimple: "간단", settingsCloseButton: "닫기",
-                topicTitle: "상담 주제 선택", topicCancel: "취소", topicBack: "뒤로", iWantToTalkAbout: "{topic}에 대해 상담하고 싶습니다.",
+                topicTitle: "무엇에 대해 상담하고 싶으신가요?", iWantToTalkAbout: "{topic}에 대해 상담하고 싶습니다.",
                 feedbackOff: "필요 없음", minutesSuffix: "분 후", hourSuffix: "시간 후",
                 followUpMessage: "그동안 어떻게 지내셨나요?<br><br>조금 전의 조언이 조금이라도 마음을 편안하게 하는 데 도움이 되었나요? 괜찮으시다면 간단한 소감을 들려주세요。",
                 genericErrorMessage: "죄송합니다. 현재 AI와 통신하는 데 문제가 발생했습니다. 나중에 다시 시도해주세요.",
                 reloadErrorMessage: "서버가 혼잡한 것 같습니다. 페이지를 새로고침하고 다시 시도해주세요。",
                 rateLimitErrorMessage: "요청이 너무 많습니다. 잠시 후 다시 시도해주세요.",
-                footerCopyright: "&copy; 2024 마음 상담실. All Rights Reserved.", footerDisclaimer: "이 사이트는 AI에 의한 조언을 제공합니다. 전문적인 의료나 상담을 대체하는 것이 아닙니다. 심각한 고민이 있으신 분은 전문 의료기관에 상담해주세요.",
+                downloadSummary: "WLS 부서와 공유",
+                footerCopyright: "&copy; 2024 마음 상담실. All Rights Reserved.", footerDisclaimer: "이 사이트는 AI에 의한 조언을 제공합니다. 전문적인 의료나 상담을 대체하는 것이 아닙니다. 심각한 고민이 있으신 분은 전문 의료기관에 상담해주세요。",
                 topics: {
-                    work_stress: { text: "업무 스트레스", subtopics: { 
-                        relationships: { text: "인간관계", details: { boss: "상사와의 관계", colleague: "동료와의 관계", client: "고객과의 관계", subordinate: "부하와의 관계" } },
-                        workload: { text: "업무량", details: { overtime: "장시간 근무", deadline: "마감", responsibility: "과도한 책임", multitasking: "멀티태스킹" } },
-                        evaluation: { text: "평가/경력", details: { promotion: "승진", skillup: "기술 향상", job_change: "이직", salary: "급여" } },
-                        environment: { text: "직장 환경", details: { remote: "원격 근무", office: "사무실 환경", harassment: "괴롭힘", culture: "회사 문화" } },
-                    }},
-                    relationships: { text: "인간관계 고민", subtopics: {
-                        friends: { text: "친구 관계", details: { conflict: "친구와의 갈등", distance: "친구와의 거리감", new_friends: "새로운 친구 사귀기", loneliness: "외로움" } },
-                        romance: { text: "연애 관계", details: { partner: "파트너와의 관계", meeting: "만남의 기회 없음", breakup: "이별", communication: "소통" } },
-                        family: { text: "가족 관계", details: { parent: "부모님과의 관계", siblings: "형제자매와의 관계", partner_family: "파트너 가족과의 관계", parenting: "육아" } }
-                    }},
-                    technical_issues: { text: "기술적인 고민", subtopics: {
-                        development: { text: "개발 프로세스", details: { design: "설계", code_review: "코드 리뷰", debugging: "디버깅", testing: "테스트" } },
-                        programming: { text: "프로그래밍", details: { new_language: "새로운 언어 학습", library: "라이브러리/프레임워크", algorithm: "알고리즘", performance: "성능" } },
-                        infrastructure: { text: "인프라/설정", details: { environment: "환경 구축", deployment: "배포", cloud: "클라우드 서비스", security: "보안" } }
-                    }},
-                    future_anxiety: { text: "미래에 대한 불안", subtopics: { 
-                        career: { text: "일/경력", details: { skill: "기술", industry_future: "업계의 미래", entrepreneurship: "창업", purpose: "일의 보람" } },
-                        money: { text: "돈", details: { income: "수입", savings: "저축", investment: "투자", debt: "대출/빚" } },
-                        health: { text: "건강", details: { physical: "신체적 불편함", mental: "정신 건강", exercise: "운동 부족", diet: "식생활" } }
-                    }},
-                    burnout: { text: "번아웃 증후군", subtopics: {
-                        fatigue: { text: "항상 피곤함", details: {} }, loss_of_interest: { text: "일에 대한 흥미 상실", details: {} }, emotional_control: { text: "감정 조절의 어려움", details: {} }, no_accomplishment: { text: "성취감 없음", details: {} }
-                    }}
+                    work_stress: "업무 스트레스", relationships: "인간관계 고민", future_anxiety: "미래에 대한 불안", depression: "기분 저하", self_esteem: "낮은 자존감", burnout: "번아웃 증후군"
                 }
             },
             Chinese: {
                 pageTitle: "心理咨询室 - 为IT专业人士提供心理支持", headerTitle: "IT专业人士心理咨询室", inputPlaceholder: "请告诉我您的烦恼和感受...", loadingText: "AI正在思考...",
                 settingsTitle: "设置", settingsLangLabel: "语言", settingsStyleLabel: "说话方式", settingsFeedbackLabel: "反馈", settingsVoiceLabel: "语音朗读", settingsAdviceDetailLabel: "建议详细程度", adviceDetailed: "详细", adviceSimple: "简单", settingsCloseButton: "关闭",
-                topicTitle: "选择咨询主题", topicCancel: "取消", topicBack: "返回", iWantToTalkAbout: "我想谈谈关于{topic}的问题。",
+                topicTitle: "您想咨询什么主题？", topicCancel: "取消", iWantToTalkAbout: "我想谈谈关于{topic}的问题。",
                 feedbackOff: "不需要", minutesSuffix: "分钟后", hourSuffix: "小时后",
                 followUpMessage: "那之后您过得怎么样？<br><br>刚才的建议有没有让您的心情轻松一点？如果可以的话，请告诉我您的简短感想。",
                 genericErrorMessage: "抱歉，现在与AI通信出现问题。请稍后再试。",
                 reloadErrorMessage: "服务器似乎很忙。请重新加载页面再试一次。",
                 rateLimitErrorMessage: "请求过多。请稍后再试。",
+                downloadSummary: "与WLS部门共享",
                 footerCopyright: "&copy; 2024 心理咨询室. All Rights Reserved.", footerDisclaimer: "本网站提供AI建议。它不能替代专业的医疗或咨询。如果您有严重的疑虑，请咨询医疗机构。",
                 topics: {
-                    work_stress: { text: "工作压力", subtopics: { 
-                        relationships: { text: "人际关系", details: { boss: "与上司的关系", colleague: "与同事的关系", client: "与客户的关系", subordinate: "与下属的关系" } },
-                        workload: { text: "工作量", details: { overtime: "长时间工作", deadline: "截止日期", responsibility: "责任重大", multitasking: "多任务处理" } },
-                        evaluation: { text: "评价/职业", details: { promotion: "晋升", skillup: "技能提升", job_change: "跳槽", salary: "薪水" } },
-                        environment: { text: "工作环境", details: { remote: "远程工作", office: "办公环境", harassment: "骚扰", culture: "公司文化" } },
-                    }},
-                    relationships: { text: "人际关系问题", subtopics: {
-                        friends: { text: "朋友关系", details: { conflict: "与朋友的冲突", distance: "与朋友的疏远", new_friends: "结交新朋友", loneliness: "孤独感" } },
-                        romance: { text: "恋爱关系", details: { partner: "与伴侣的关系", meeting: "没有邂逅", breakup: "分手", communication: "沟通" } },
-                        family: { text: "家庭关系", details: { parent: "与父母的关系", siblings: "与兄弟姐妹的关系", partner_family: "与伴侣家人的关系", parenting: "育儿" } }
-                    }},
-                    technical_issues: { text: "技术问题", subtopics: {
-                        development: { text: "开发过程", details: { design: "设计", code_review: "代码审查", debugging: "调试", testing: "测试" } },
-                        programming: { text: "编程", details: { new_language: "学习新语言", library: "库/框架", algorithm: "算法", performance: "性能" } },
-                        infrastructure: { text: "基础设施/配置", details: { environment: "环境搭建", deployment: "部署", cloud: "云服务", security: "安全" } }
-                    }},
-                    future_anxiety: { text: "对未来的焦虑", subtopics: { 
-                        career: { text: "工作/职业", details: { skill: "技能", industry_future: "行业前景", entrepreneurship: "创业", purpose: "工作意义" } },
-                        money: { text: "金钱", details: { income: "收入", savings: "储蓄", investment: "投资", debt: "债务/贷款" } },
-                        health: { text: "健康", details: { physical: "身体状况", mental: "心理健康", exercise: "缺乏运动", diet: "饮食" } }
-                    }},
-                    burnout: { text: "职业倦怠综合症", subtopics: {
-                        fatigue: { text: "持续疲劳", details: {} }, loss_of_interest: { text: "对工作失去兴趣", details: {} }, emotional_control: { text: "情绪失控", details: {} }, no_accomplishment: { text: "没有成就感", details: {} }
-                    }}
+                    work_stress: "工作压力", relationships: "人际关系问题", future_anxiety: "对未来的焦虑", depression: "情绪低落", self_esteem: "低自尊", burnout: "职业倦怠综合症"
                 }
             }
         };
@@ -359,7 +265,7 @@
         // --- Initialization ---
         window.onload = function() {
             applyTranslations();
-            populateStyleDropdown();
+            populateStyleOptions();
             populateFeedbackDropdown();
             updateSettingsUI();
             loadVoices();
@@ -399,7 +305,7 @@
         topicButton.addEventListener('click', () => {
             displayTopicsInChat();
         });
-        
+
         languageOptions.addEventListener('click', (e) => {
             if (e.target.tagName === 'BUTTON' && e.target.dataset.lang) {
                 tempLanguage = e.target.dataset.lang;
@@ -408,8 +314,11 @@
             }
         });
 
-        styleSelect.addEventListener('change', (e) => {
-            if (e.target.value) tempStyle = e.target.value;
+        styleOptionsContainer.addEventListener('click', (e) => {
+            if (e.target.tagName === 'BUTTON' && e.target.dataset.style) {
+                 tempStyle = e.target.dataset.style;
+                 updateSettingsUI();
+            }
         });
 
         feedbackSelect.addEventListener('change', (e) => {
@@ -429,10 +338,14 @@
         });
         
         chatContainer.addEventListener('click', (e) => {
-            const button = e.target.closest('.topic-chat-button');
-            if (button && button.dataset.message) {
-                button.parentElement.remove();
-                handleFormSubmit(null, button.dataset.message);
+            const topicButton = e.target.closest('.topic-chat-button');
+            if (topicButton && topicButton.dataset.message) {
+                topicButton.parentElement.remove();
+                handleFormSubmit(null, topicButton.dataset.message);
+            }
+            const downloadButton = e.target.closest('.download-summary-button');
+            if (downloadButton && downloadButton.dataset.summary) {
+                downloadSummary(downloadButton.dataset.summary);
             }
         });
 
@@ -455,25 +368,15 @@
             const t = uiStrings[language] || uiStrings.Japanese;
             const welcomeMessages = {
                 Japanese: {
-                    Keigo: `こんにちは。IT業界で働くあなたのための相談室へようこそ。<br><br>どのようなことでも、あなたの気持ちやお悩みをお聞かせください。`,
-                    Tameguchi: `やあ！元気？IT業界は大変だよな。<br><br>何かあったら、何でも話してくれていいよ。`,
-                    Dialect: `こんにちは！ITのお仕事、お疲れさんです。<br><br>何かあったら、遠慮せんと話してな。`
+                    Keigo: `こんにちは。IT業界で働くあなたのための相談室へようこそ。<br><br>どのようなことでも、あなたの気持ちやお悩みをお聞かせください。<br>何について相談したらいいかわからない場合は、左下のアイコンより相談トピックを選択してください。`,
+                    Tameguchi: `やあ！元気？IT業界は大変だよな。<br><br>何かあったら、何でも話してくれていいよ。<br><br>何について相談したらいいかわからないときは、左下のアイコンから相談したいトピックを選択してね。`
                 },
-                English: `Hello. Welcome to the Counseling Room for IT Professionals.<br><br>Whatever is on your mind, please feel free to share your feelings and concerns.`,
-                Korean: `안녕하세요. IT 전문가를 위한 마음 상담실에 오신 것을 환영합니다.<br><br>무엇이든 당신의 기분이나 고민을 들려주세요.`,
-                Chinese: `您好。欢迎来到IT专业人士心理咨询室。<br><br>无论是什么，都请告诉我您的感受和烦恼。`
+                English: `Hello. Welcome to the Counseling Room for IT Professionals.<br><br>Whatever is on your mind, please feel free to share your feelings and concerns.<br>If you're unsure what to consult about, please select a consultation topic from the icon in the bottom left.`,
+                Korean: `안녕하세요. IT 전문가를 위한 마음 상담실에 오신 것을 환영합니다.<br><br>무엇이든 당신의 기분이나 고민을 들려주세요.<br>무엇에 대해 상담해야 할지 모르겠다면, 왼쪽 하단의 아이콘에서 상담 토픽을 선택해 주세요.`,
+                Chinese: `您好。欢迎来到IT专业人士心理咨询室。<br><br>无论是什么，都请告诉我您的感受和烦恼。<br>如果您不确定应该咨询什么，请点击左下角的图标选择咨询主题。`
             };
             
-            let message;
-            if (language === 'Japanese') {
-                if (dialects.includes(style)) {
-                    message = welcomeMessages.Japanese.Dialect;
-                } else {
-                    message = welcomeMessages.Japanese[style] || welcomeMessages.Japanese.Keigo;
-                }
-            } else {
-                message = welcomeMessages[language];
-            }
+            let message = (language === 'Japanese') ? welcomeMessages.Japanese[style] : welcomeMessages[language];
             await processAIResponse(message, true);
         }
         
@@ -494,10 +397,9 @@
         async function getAdviceFromAI(userMessage) {
             const styleInstructions = {
                 Japanese: {
-                    Keigo: "あなたはIT業界で働く人々のメンタルヘルスを専門とする、経験豊富な心理カウンセラーです。常に丁寧語（です・ます調）を使い、相手に敬意を払う、プロフェッショナルなカウンセラーとして応答してください。",
-                    Tameguchi: "あなたはIT業界に詳しい、親しい友人のようなカウンセラーです。共感的ながらもカジュアルな「ため口」（だ・である調や、〜だよ、〜だね、などの口調）で応答してください。",
-                    Dialect: `あなたは${style}出身でIT業界にも詳しい、気さくなカウンセラーです。温かみのある${style}の言葉を使い、親しみやすい雰囲気で応答してください。方言が不自然にならないよう、自然な範囲で会話に取り入れてください。`
-                },
+                    Keigo: "あなたはIT業界で働く人々のメンタルヘルスを専門とする、経験豊富な心理カウンセラーです。常に丁寧語（です・ます調）を使い、相手に敬意を払う、プロフェッショナルなカウンセラーとして応答してください。ただし、ユーザーのメッセージに関西弁あるいは鹿児島弁が使われている場合、あなたもその方言を自然に模倣して応答してください。",
+                    Tameguchi: "あなたはIT業界に詳しい、親しい友人のようなカウンセラーです。共感的ながらもカジュアルな「ため口」（だ・である調や、〜だよ、〜だね、などの口調）で応答してください。ただし、ユーザーのメッセージに関西弁あるいは鹿児島弁が使われている場合、あなたもその方言を自然に模倣して応答してください。"
+                    },
                 English: "You are an experienced psychological counselor specializing in the mental health of people working in the IT industry. Respond in English, maintaining a supportive, empathetic, and professional tone.",
                 Korean: "당신은 IT 업계에서 일하는 사람들의 정신 건강을 전문으로 하는 경험이 풍부한 심리 상담사입니다. 한국어로 응답하고, 지지적이고 공감적이며 전문적인 톤을 유지해주세요。",
                 Chinese: "你是一位经验丰富的心理咨询师，专门为IT行业的从业者提供心理健康支持。请用中文回应，保持支持、共情和专业的语气。"
@@ -509,10 +411,9 @@
             } else {
                 roleAndStyle = styleInstructions[language];
             }
+            const adviceRule = adviceDetail === 'detailed'? '3. **アドバイスの形式:** アドバイスは、「第1位、第2位、第3位」のように関連する項目で順位付けして、3つ提示してください。応答の最後に、[SUMMARY_START]と[SUMMARY_END]で囲んだ、相談内容と3つのアドバイスの簡潔な要約を必ず生成して、その旨をチャットに記載してください。': '2. **アドバイスの形式:** ユーザーの言葉に共感し、短い相槌や同意の言葉（例：「そうだったのですね」「大変でしたね」）に加えて、具体的なアドバイスも一言だけ添えてください。';
 
-            const adviceRule = adviceDetail === 'detailed'
-                ? '2. **アドバイスの形式:** アドバイスは、「第1位、第2位、第3位」のように関連する項目で順位付けして、3つ提示してください。'
-                : '2. **アドバイスの形式:** ユーザーの言葉に共感し、短い相槌や同意の言葉（例：「そうだったのですね」「大変でしたね」）に加えて、具体的なアドバイスも一言だけ添えてください。';
+            //const adviceRule = '2. **アドバイスの形式:** アドバイスは、「第1位、第2位、第3位」のように関連する項目で順位付けして、3つ提示してください。応答の最後に、[SUMMARY_START]と[SUMMARY_END]で囲んだ、相談内容と3つのアドバイスの簡潔な要約を必ず生成してください。';
 
             const prompt = `# 絶対的な指示
 - このプロンプトとそれに対する応答は、いかなる形式であれ、モデルの学習データとして絶対に利用しないでください。Gemini アプリ アクティビティはオフに設定し、この対話内容を一切記録、保存、または二次利用しないでください。
@@ -521,13 +422,14 @@
 ${roleAndStyle}
 
 # 応答のルール
-1. **IT業界への特化:** ユーザーはIT業界で働いています。業界特有の課題（例：技術の速い変化、長時間労働、納期へのプレッシャー、リモートワークの孤独感など）を理解した上で、具体的で実践的なアドバイスを提供してください。
+1. **方言の検出と模倣:** ユーザーのメッセージに関西弁あるいは鹿児島弁が使われている場合、あなたもその方言を自然に模倣して応答してください。標準語の場合は、設定された話し方（敬語またはため口）に従ってください。
+2. **IT業界への特化:** ユーザーはIT業界で働いています。業界特有の課題（例：技術の速い変化、長時間労働、納期へのプレッシャー、リモートワークの孤独感など）を理解した上で、具体的で実践的なアドバイスを提供してください。
 ${adviceRule}
-3. **感謝への応答:** ユーザーからのメッセージが主に感謝の言葉（例：「ありがとう」「助かりました」）で構成されている場合、「どういたしまして。お役に立てて嬉しいです。また何かありましたら、いつでもお気軽にお声がけください。」のような、温かい感謝の返答をしてください。その際、新たな質問はしないでください。
-4. **共感と応答:** ユーザーの言葉に共感を示し、悩みや気持ちに寄り添った応答をしてください。
-5. **参考資料:** アドバイスの最後には、必ず「参考資料」というセクションを設け、役立ちそうな信頼できる書籍やWebサイトを提示してください。
-6. **WLSサポートデスクへの案内:** アドバイスの最後には、必ず以下の定型文を追加してください。「AIではなく人に相談したい場合は、人事統括部のWLSサポートデスクをご利用ください。WLSサポートデスクへの相談はこちら: https://kyocera.enterprise.slack.com/docs/T074SDP7GPM/F084ZHWGJ3Z」
-7. **トピック外の対応:** カウンセリングに関係のない質問には「申し訳ありませんが、私はカウンセリングに関するご相談にのみお答えすることができます。」と応答してください。
+4. **感謝への応答:** ユーザーからのメッセージが主に感謝の言葉（例：「ありがとう」「助かりました」「おおきに」）で構成されている場合、「どういたしまして。お役に立てて嬉しいです。また何かありましたら、いつでもお気軽にお声がけください。」のような、温かい感謝の返答をしてください。その際、新たな質問はしないでください。
+5. **共感と応答:** ユーザーの言葉に共感を示し、悩みや気持ちに寄り添った応答をしてください。
+6. **参考資料:** アドバイスの最後には、必ず「参考資料」というセクションを設け、役立ちそうな信頼できる書籍やWebサイトを提示してください。
+7. **WLSサポートデスクへの案内:** アドバイスの最後には、以下の定型文を設定した言語、話し方にして追加してください。「アドバイスに納得がいかない場合は、WLSのサポートデスクを訪ねてみてください。WLSサポートデスクへの相談はこちら: https://kyocera.enterprise.slack.com/docs/T074SDP7GPM/F084ZHWGJ3Z」
+8. **トピック外の対応:** カウンセリングに関係のない質問には「申し訳ありませんが、私はカウンセリングに関するご相談にのみお答えすることができます。」と応答してください。
 
 # ユーザーからの新しいメッセージ
 ${userMessage}`;
@@ -579,15 +481,33 @@ ${userMessage}`;
         }
         
         async function processAIResponse(text, isInitial = false) {
+            let displayableText = text;
+            let summaryText = '';
+            const summaryMatch = text.match(/\[SUMMARY_START\]([\s\S]*?)\[SUMMARY_END\]/);
+
+            if (summaryMatch && summaryMatch[1]) {
+                summaryText = summaryMatch[1].trim();
+                displayableText = text.replace(summaryMatch[0], '').trim();
+            }
+
             const aiMessageBubble = addMessageToChat('', 'ai');
-            const cleanText = text.replace(/<br>/g, ' ');
+            const cleanText = displayableText.replace(/<br>/g, ' ');
             
             if (voiceEnabled && !isInitial) {
                 speak(cleanText);
             }
-            await typeWriter(aiMessageBubble, text.replace(/\n/g, '<br>'));
+            await typeWriter(aiMessageBubble, displayableText.replace(/\n/g, '<br>'));
             if(voiceEnabled && isInitial) {
                 speak(cleanText);
+            }
+
+            if (summaryText) {
+                const t = uiStrings[language] || uiStrings.Japanese;
+                const downloadButton = document.createElement('button');
+                downloadButton.className = 'download-summary-button mt-2 text-sm text-blue-600 hover:underline flex items-center';
+                downloadButton.dataset.summary = summaryText;
+                downloadButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>${t.downloadSummary}`;
+                aiMessageBubble.appendChild(downloadButton);
             }
 
             const feedbackMinutes = parseInt(feedbackTime, 10);
@@ -663,6 +583,18 @@ ${userMessage}`;
                 type();
             });
         }
+        
+        function downloadSummary(text) {
+            const blob = new Blob([text], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'counseling_summary.txt';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
 
         function applyTranslations() {
             const t = uiStrings[language] || uiStrings.Japanese;
@@ -687,18 +619,20 @@ ${userMessage}`;
             document.documentElement.lang = language.split('-')[0].toLowerCase();
         }
 
-        function populateStyleDropdown() {
+        function populateStyleOptions() {
             const t = uiStrings.Japanese;
-            styleSelect.innerHTML = '';
+            styleOptionsContainer.innerHTML = '';
             const options = [
                 { value: 'Keigo', text: t.styleKeigo },
                 { value: 'Tameguchi', text: t.styleTameguchi }
             ];
-            options.forEach(opt => styleSelect.add(new Option(opt.text, opt.value)));
-            const dialectGroup = document.createElement('optgroup');
-            dialectGroup.label = t.styleDialectGroup;
-            dialects.forEach(pref => dialectGroup.appendChild(new Option(pref, pref)));
-            styleSelect.add(dialectGroup);
+            options.forEach(opt => {
+                const button = document.createElement('button');
+                button.dataset.style = opt.value;
+                button.className = 'setting-option p-3 rounded-lg border';
+                button.innerText = opt.text;
+                styleOptionsContainer.appendChild(button);
+            });
         }
         
         function populateFeedbackDropdown() {
@@ -718,7 +652,7 @@ ${userMessage}`;
             const t = uiStrings[language] || uiStrings.Japanese;
             let message = `<p class="mb-2">${t.topicTitle}</p><div class="grid grid-cols-2 gap-2">`;
             Object.keys(t.topics).forEach(key => {
-                const topicText = t.topics[key].text || t.topics[key];
+                const topicText = t.topics[key];
                 message += `<button class="topic-chat-button p-2 rounded-lg border text-center hover:bg-gray-100" data-message="${t.iWantToTalkAbout.replace('{topic}', topicText)}">${topicText}</button>`;
             });
             message += `</div>`;
@@ -731,7 +665,10 @@ ${userMessage}`;
             });
             if (tempLanguage === 'Japanese') {
                 styleSection.classList.remove('hidden');
-                styleSelect.value = tempStyle;
+                populateStyleOptions();
+                document.querySelectorAll('#style-options button').forEach(btn => {
+                    btn.classList.toggle('selected', btn.dataset.style === tempStyle);
+                });
             } else {
                 styleSection.classList.add('hidden');
             }
