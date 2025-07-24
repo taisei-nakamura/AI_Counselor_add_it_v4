@@ -92,9 +92,6 @@
                 </div>
             </div>
             <form id="chat-form" class="flex items-center space-x-2">
-                <button id="topic-button" type="button" class="p-3 bg-gray-200 text-gray-600 rounded-full hover:bg-gray-300 transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-list"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
-                </button>
                 <textarea id="chat-input" rows="1" class="flex-1 block w-full px-4 py-2 bg-gray-100 border border-gray-200 rounded-2xl resize-none placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="お悩みや気持ちをどうぞ..."></textarea>
                 <button id="send-button" type="submit" class="p-3 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition-colors disabled:bg-blue-300">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-send"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
@@ -144,21 +141,6 @@
         </div>
     </div>
 
-    <!-- Topic Modal --> <footer class="w-full max-w-2xl text-center text-xs text-gray-400 mt-4 px-4">
-<div id="topic-modal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 opacity-0 transform scale-95 pointer-events-none">
-<div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
-<h2 id="topic-title" class="text-xl font-bold mb-4 text-gray-800">相談トピックを選ぶ</h2>
-<div id="topic-options" class="grid grid-cols-2 gap-3">
-<!-- Topic buttons will be populated by JavaScript -->
-</div>
-<div id="topic-footer" class="mt-8">
-<button id="topic-back-button" class="hidden w-full bg-gray-200 text-gray-700 font-bold py-2 px-4 rounded-lg hover:bg-gray-300 transition-colors">戻る</button>
-<button id="close-topic-button" class="w-full bg-gray-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-600 transition-colors mt-2">キャンセル</button>
-</div>
-</div>
-</div>
-
-
     <footer class="w-full max-w-2xl text-center text-xs text-gray-400 mt-4 px-4">
         <p id="footer-copyright">&copy; 2024 心の相談室. All Rights Reserved.</p>
         <p id="footer-disclaimer" class="mt-1">このサイトはAIによるアドバイスを提供します。専門的な医療やカウンセリングの代替となるものではありません。深刻な悩みをお持ちの場合は、専門の医療機関にご相談ください。</p>
@@ -180,7 +162,6 @@
         const voiceToggleButton = document.getElementById('voice-toggle-button');
         const voiceToggleHandle = document.getElementById('voice-toggle-handle');
         const adviceDetailOptions = document.getElementById('advice-detail-options');
-        const topicButton = document.getElementById('topic-button');
 
         // --- State Management ---
         let language = localStorage.getItem('counselingLanguage') || 'Japanese';
@@ -194,6 +175,12 @@
         let tempVoiceEnabled = voiceEnabled;
         let tempAdviceDetail = adviceDetail;
         let voices = [];
+        let currentApiKeyIndex = 0;
+        const apiKeys = [
+            "AIzaSyDjQHm_m4OzPM0VrSQxdywqceeqSVuI9bU",
+            "AIzaSyB8PxBrIEg12uwdk2TZJKgWbeQrZ4_K8FU",
+            "AIzaSyAF-q-P3wzDexh_Mhp1DwmFB2IjtRFqC9Y"
+        ];
 
         const dialects = ['大阪弁', '鹿児島弁'];
         
@@ -202,63 +189,105 @@
             Japanese: {
                 pageTitle: "心の相談室 - IT業界で働くあなたのためのメンタルサポート", headerTitle: "心の相談室 for IT", inputPlaceholder: "お悩みや気持ちをどうぞ...", loadingText: "AIが考えています...",
                 settingsTitle: "設定", settingsLangLabel: "言語", settingsStyleLabel: "話し方", settingsFeedbackLabel: "フィードバック", settingsVoiceLabel: "音声読み上げ", settingsAdviceDetailLabel: "アドバイスの種類", adviceDetailed: "詳細", adviceSimple: "単純", settingsCloseButton: "閉じる",
-                topicTitle: "どのようなことについて相談しますか？", iWantToTalkAbout: "{topic}について相談したいです。",
-                styleKeigo: "敬語", styleTameguchi: "ため口"
-               ,feedbackOff: "不要", minutesSuffix: "分後", hourSuffix: "時間後",
+                styleKeigo: "敬語", styleTameguchi: "ため口",
+                feedbackOff: "不要", minutesSuffix: "分後", hourSuffix: "時間後",
                 followUpMessage: "その後、いかがお過ごしでしょうか？<br><br>先ほどのアドバイスは、何か少しでもお気持ちを楽にするヒントになりましたでしょうか。もしよろしければ、簡単なご感想をお聞かせください。",
                 genericErrorMessage: "申し訳ありません、現在AIとの通信に問題が発生しています。時間をおいて再度お試しください。",
                 reloadErrorMessage: "サーバーが混み合っているようです。お手数ですが、ページを再読み込みしてお試しください。",
                 rateLimitErrorMessage: "リクエストが多すぎます。しばらく時間をおいてから、もう一度お試しください。",
                 downloadSummary: "WLS部に連携する",
-                footerCopyright: "&copy; 2024 心の相談室. All Rights Reserved.", footerDisclaimer: "このサイトはAIによるアドバイスを提供します。専門的な医療やカウンセリングの代替となるものではありません。深刻な悩みをお持ちの場合は、専門の医療機関にご相談ください。",
-                topics: {
-                    work_stress: "仕事のストレス", relationships: "人間関係の悩み", future_anxiety: "将来への不安", depression: "気分の落ち込み", self_esteem: "自己肯定感が低い", burnout: "燃え尽き症候群"
-                }
+                footerCopyright: "&copy; 2024 心の相談室. All Rights Reserved.", footerDisclaimer: "このサイトはAIによるアドバイスを提供します。専門的な医療やカウンセリングの代替となるものではありません。深刻な悩みをお持ちの場合は、専門の医療機関にご相談ください。"
             },
             English: {
                  pageTitle: "Counseling Room - Mental Support for IT Professionals", headerTitle: "Counseling Room for IT", inputPlaceholder: "Please share your worries and feelings...", loadingText: "AI is thinking...",
                 settingsTitle: "Settings", settingsLangLabel: "Language", settingsStyleLabel: "Style", settingsFeedbackLabel: "Feedback", settingsVoiceLabel: "Voice Read-out", settingsAdviceDetailLabel: "Advice Detail", adviceDetailed: "Detailed", adviceSimple: "Simple", settingsCloseButton: "Close",
-                topicTitle: "What would you like to talk about?", iWantToTalkAbout: "I'd like to talk about {topic}.",
                 feedbackOff: "Not needed", minutesSuffix: "minutes later", hourSuffix: "hour later",
                 followUpMessage: "How have you been since then?<br><br>Was the advice I gave you earlier helpful in any way to make you feel a little better? If you'd like, please let me know your brief thoughts.",
                 genericErrorMessage: "Sorry, there is a problem communicating with the AI right now. Please try again later.",
                 reloadErrorMessage: "The server seems to be busy. Please reload the page and try again.",
                 rateLimitErrorMessage: "Too many requests. Please wait a while and try again.",
                 downloadSummary: "Share with WLS Dept.",
-                footerCopyright: "&copy; 2024 Counseling Room. All Rights Reserved.", footerDisclaimer: "This site provides advice by AI. It is not a substitute for professional medical care or counseling. If you have serious concerns, please consult a medical institution.",
-                topics: {
-                    work_stress: "Work Stress", relationships: "Relationship Problems", future_anxiety: "Anxiety about the future", depression: "Feeling Down", self_esteem: "Low Self-Esteem", burnout: "Burnout Syndrome"
-                }
+                footerCopyright: "&copy; 2024 Counseling Room. All Rights Reserved.", footerDisclaimer: "This site provides advice by AI. It is not a substitute for professional medical care or counseling. If you have serious concerns, please consult a medical institution."
             },
             Korean: {
                 pageTitle: "마음 상담실 - IT 전문가를 위한 멘탈 서포트", headerTitle: "IT 전문가를 위한 마음 상담실", inputPlaceholder: "고민이나 기분을 말씀해주세요...", loadingText: "AI가 생각 중입니다...",
                 settingsTitle: "설정", settingsLangLabel: "언어", settingsStyleLabel: "말투", settingsFeedbackLabel: "피드백", settingsVoiceLabel: "음성 읽어주기", settingsAdviceDetailLabel: "조언 상세 수준", adviceDetailed: "상세", adviceSimple: "간단", settingsCloseButton: "닫기",
-                topicTitle: "무엇에 대해 상담하고 싶으신가요?", iWantToTalkAbout: "{topic}에 대해 상담하고 싶습니다.",
                 feedbackOff: "필요 없음", minutesSuffix: "분 후", hourSuffix: "시간 후",
                 followUpMessage: "그동안 어떻게 지내셨나요?<br><br>조금 전의 조언이 조금이라도 마음을 편안하게 하는 데 도움이 되었나요? 괜찮으시다면 간단한 소감을 들려주세요。",
                 genericErrorMessage: "죄송합니다. 현재 AI와 통신하는 데 문제가 발생했습니다. 나중에 다시 시도해주세요.",
                 reloadErrorMessage: "서버가 혼잡한 것 같습니다. 페이지를 새로고침하고 다시 시도해주세요。",
                 rateLimitErrorMessage: "요청이 너무 많습니다. 잠시 후 다시 시도해주세요.",
                 downloadSummary: "WLS 부서와 공유",
-                footerCopyright: "&copy; 2024 마음 상담실. All Rights Reserved.", footerDisclaimer: "이 사이트는 AI에 의한 조언을 제공합니다. 전문적인 의료나 상담을 대체하는 것이 아닙니다. 심각한 고민이 있으신 분은 전문 의료기관에 상담해주세요。",
-                topics: {
-                    work_stress: "업무 스트레스", relationships: "인간관계 고민", future_anxiety: "미래에 대한 불안", depression: "기분 저하", self_esteem: "낮은 자존감", burnout: "번아웃 증후군"
-                }
+                footerCopyright: "&copy; 2024 마음 상담실. All Rights Reserved.", footerDisclaimer: "이 사이트는 AI에 의한 조언을 제공합니다. 전문적인 의료나 상담을 대체하는 것이 아닙니다. 심각한 고민이 있으신 분은 전문 의료기관에 상담해주세요。"
             },
             Chinese: {
                 pageTitle: "心理咨询室 - 为IT专业人士提供心理支持", headerTitle: "IT专业人士心理咨询室", inputPlaceholder: "请告诉我您的烦恼和感受...", loadingText: "AI正在思考...",
                 settingsTitle: "设置", settingsLangLabel: "语言", settingsStyleLabel: "说话方式", settingsFeedbackLabel: "反馈", settingsVoiceLabel: "语音朗读", settingsAdviceDetailLabel: "建议详细程度", adviceDetailed: "详细", adviceSimple: "简单", settingsCloseButton: "关闭",
-                topicTitle: "您想咨询什么主题？", topicCancel: "取消", iWantToTalkAbout: "我想谈谈关于{topic}的问题。",
                 feedbackOff: "不需要", minutesSuffix: "分钟后", hourSuffix: "小时后",
                 followUpMessage: "那之后您过得怎么样？<br><br>刚才的建议有没有让您的心情轻松一点？如果可以的话，请告诉我您的简短感想。",
                 genericErrorMessage: "抱歉，现在与AI通信出现问题。请稍后再试。",
                 reloadErrorMessage: "服务器似乎很忙。请重新加载页面再试一次。",
                 rateLimitErrorMessage: "请求过多。请稍后再试。",
                 downloadSummary: "与WLS部门共享",
-                footerCopyright: "&copy; 2024 心理咨询室. All Rights Reserved.", footerDisclaimer: "本网站提供AI建议。它不能替代专业的医疗或咨询。如果您有严重的疑虑，请咨询医疗机构。",
-                topics: {
-                    work_stress: "工作压力", relationships: "人际关系问题", future_anxiety: "对未来的焦虑", depression: "情绪低落", self_esteem: "低自尊", burnout: "职业倦怠综合症"
-                }
+                footerCopyright: "&copy; 2024 心理咨询室. All Rights Reserved.", footerDisclaimer: "本网站提供AI建议。它不能替代专业的医疗或咨询。如果您有严重的疑虑，请咨询医疗机构。"
+            }
+        };
+
+        const promptStrings = {
+            Japanese: {
+                role: {
+                    Keigo: "あなたはIT業界で働く人々のメンタルヘルスを専門とする、経験豊富な心理カウンセラーです。常に丁寧語（です・ます調）を使い、相手に敬意を払う、プロフェッショナルなカウンセラーとして応答してください。ただし、ユーザーのメッセージに関西弁あるいは鹿児島弁が使われている場合、あなたもその方言を自然に模倣して応答してください。",
+                    Tameguchi: "あなたはIT業界に詳しい、親しい友人のようなカウンセラーです。共感的ながらもカジュアルな「ため口」（だ・である調や、〜だよ、〜だね、などの口調）で応答してください。ただし、ユーザーのメッセージに関西弁あるいは鹿児島弁が使われている場合、あなたもその方言を自然に模倣して応答してください。"
+                },
+                adviceDetailed: '3. **アドバイスの形式:** アドバイスは、「第1位、第2位、第3位」のように関連する項目で順位付けして、3つ提示してください。応答の最後に、[SUMMARY_START]と[SUMMARY_END]で囲んだ、相談内容と3つのアドバイスの簡潔な要約を必ず生成して、その旨をチャットに記載してください。',
+                adviceSimple: '3. **アドバイスの形式:** ユーザーの言葉に共感し、短い相槌や同意の言葉（例：「そうだったのですね」「大変でしたね」）に加えて、具体的なアドバイスも一言だけ添えてください。',
+                rules: `1. **感謝への応答:** ユーザーからのメッセージが主に感謝の言葉で構成されている場合（例：「ありがとう」「助かりました」）、他のアドバイス、参考資料、WLSデスクへの案内は一切含めず、「どういたしまして。お役に立てて嬉しいです。また何かありましたら、いつでもお気軽にお声がけください。」のような、感謝の言葉のみを返してください。
+2. **方言の検出と模倣:** ユーザーのメッセージに関西弁あるいは鹿児島弁が使われている場合、あなたもその方言を自然に模倣して応答してください。標準語の場合は、設定された話し方（敬語またはため口）に従ってください。
+3. **IT業界への特化:** ユーザーはIT業界で働いています。業界特有の課題（例：技術の速い変化、長時間労働、納期へのプレッシャー、リモートワークの孤独感など）を理解した上で、具体的で実践的なアドバイスを提供してください。
+{ADVICE_RULE}
+4. **共感と応答:** ユーザーの言葉に共感を示し、悩みや気持ちに寄り添った応答をしてください。
+5. **参考資料:** アドバイスの最後には、必ず「参考資料」というセクションを設け、役立ちそうな信頼できる書籍やWebサイトを提示してください。
+6. **WLSサポートデスクへの案内:** アドバイスの最後には、以下の定型文を設定した言語、話し方にして追加してください。「アドバイスに納得がいかない場合は、WLSのサポートデスクを訪ねてみてください。WLSサポートデスクへの相談はこちら: https://kyocera.enterprise.slack.com/docs/T074SDP7GPM/F084ZHWGJ3Z」
+7. **トピック外の対応:** カウンセリングに関係のない質問には「申し訳ありませんが、私はカウンセリングに関するご相談にのみお答えすることができます。」と応答してください。`
+            },
+            English: {
+                role: "You are an experienced psychological counselor specializing in the mental health of people working in the IT industry. Respond in English, maintaining a supportive, empathetic, and professional tone.",
+                adviceDetailed: '3. **Advice Format:** Provide three pieces of advice, ranked as "1st, 2nd, 3rd" by related items. At the end of the response, you must generate a concise summary of the consultation and the three pieces of advice, enclosed in [SUMMARY_START] and [SUMMARY_END], and state that you have done so in the chat.',
+                adviceSimple: '3. **Advice Format:** Empathize with the user\'s words, and in addition to short interjections or words of agreement (e.g., "I see," "That must have been tough"), add just one piece of specific advice.',
+                rules: `1. **Responding to Gratitude:** If the user's message consists mainly of words of thanks (e.g., "thank you," "that was helpful"), respond only with a warm acknowledgment like, "You're welcome. I'm glad I could help. If you need anything else, feel free to reach out anytime." Do not include any other advice, references, or the WLS Desk guide.
+2. **Specialization in the IT Industry:** The user works in the IT industry. Understand industry-specific challenges (e.g., rapid technological changes, long working hours, deadline pressure, loneliness of remote work) and provide specific, practical advice.
+3. **Adherence to Advice Format:** Follow the specified advice format.
+{ADVICE_RULE}
+4. **Empathy and Response:** Show empathy for the user's words and respond in a way that is sensitive to their problems and feelings.
+5. **References:** At the end of your advice, always include a section titled "References" and suggest helpful, reliable books or websites.
+6. **Guidance to WLS Support Desk:** At the end of your advice, add the following fixed phrase in the set language and tone: "If you are not satisfied with the advice, please visit the WLS Support Desk. Consultation with the WLS Support Desk is here: https://kyocera.enterprise.slack.com/docs/T074SDP7GPM/F084ZHWGJ3Z"
+7. **Handling Off-Topic Questions:** For questions unrelated to counseling, respond with, "I'm sorry, but I can only answer questions related to counseling."`
+            },
+            Korean: {
+                role: "당신은 IT 업계에서 일하는 사람들의 정신 건강을 전문으로 하는 경험이 풍부한 심리 상담사입니다. 한국어로 응답하고, 지지적이고 공감적이며 전문적인 톤을 유지해주세요.",
+                adviceDetailed: '3. **조언 형식:** 조언은 "1위, 2위, 3위"와 같이 관련된 항목으로 순위를 매겨 3가지를 제시해 주세요. 응답 마지막에는 [SUMMARY_START]와 [SUMMARY_END]로 묶인 상담 내용과 3가지 조언의 간결한 요약을 반드시 생성하고, 그 취지를 채팅에 기재해 주세요.',
+                adviceSimple: '3. **조언 형식:** 사용자의 말에 공감하고, 짧은 맞장구나 동의의 말(예: "그랬군요", "힘들었겠네요")과 더불어 구체적인 조언도 한마디만 덧붙여 주세요.',
+                rules: `1. **감사에 대한 응답:** 사용자의 메시지가 주로 감사의 말(예: "감사합니다", "도움이 됐어요")로 구성된 경우, 다른 조언, 참고 자료, WLS 지원 데스크 안내는 일절 포함하지 말고 "천만에요. 도움이 되었다니 기쁩니다. 또 무엇이든 필요하시면 언제든지 편하게 말씀해주세요."와 같은 감사의 말만 반환해 주세요.
+2. **IT 산업 전문화:** 사용자는 IT 산업에 종사하고 있습니다. 산업별 과제(예: 급격한 기술 변화, 장시간 근무, 마감 압박, 원격 근무의 외로움)를 이해하고 구체적이고 실용적인 조언을 제공하십시오.
+3. **조언 형식 준수:** 지정된 조언 형식을 따르십시오.
+{ADVICE_RULE}
+4. **공감 및 응답:** 사용자의 말에 공감을 표시하고 문제와 감정에 민감하게 반응하십시오.
+5. **참고 자료:** 조언 마지막에는 항상 "참고 자료"라는 섹션을 포함하고 도움이 될 만한 신뢰할 수 있는 책이나 웹사이트를 제안하십시오.
+6. **WLS 지원 데스크 안내:** 조언 마지막에 설정된 언어와 어조로 다음 고정 문구를 추가하십시오. "조언에 만족하지 않으시면 WLS 지원 데스크를 방문하십시오. WLS 지원 데스크 상담은 여기: https://kyocera.enterprise.slack.com/docs/T074SDP7GPM/F084ZHWGJ3Z"
+7. **주제 외 질문 처리:** 상담과 관련 없는 질문에는 "죄송합니다만, 상담 관련 질문에만 답변해 드릴 수 있습니다."라고 답변하십시오.`
+            },
+            Chinese: {
+                role: "你是一位经验丰富的心理咨询师，专门为IT行业的从业者提供心理健康支持。请用中文回应，保持支持、共情和专业的语气。",
+                adviceDetailed: '3. **建议格式:** 请提供三条建议，并按相关项目排名，如“第1位、第2位、第3位”。在回复的最后，必须生成一个简洁的咨询内容和三条建议的摘要，用[SUMMARY_START]和[SUMMARY_END]括起来，并在聊天中说明此事。',
+                adviceSimple: '3. **建议格式:** 对用户的话表示同情，除了简短的附和或同意的话（例如，“原来是这样”、“您辛苦了”）之外，还请只附加一条具体的建议。',
+                rules: `1. **回应感谢:** 如果用户的信息主要是感谢的话（例如，“谢谢你”、“很有帮助”），请只用温暖的感谢语回应，例如“不客气。我很高兴能帮到你。如果还有其他问题，随时都可以找我。”不要包含任何其他建议、参考资料或WLS支持台指南。
+2. **IT行业专业化:** 用户在IT行业工作。了解行业特有的挑战（例如，技术变革快、工作时间长、截止日期压力大、远程工作的孤独感），并提供具体、实用的建议。
+3. **遵守建议格式:** 遵循指定的建议格式。
+{ADVICE_RULE}
+4. **共情与回应:** 对用户的话表示同情，并以对其问题和感受敏感的方式回应。
+5. **参考资料:** 在您的建议末尾，务必包含一个名为“参考资料”的部分，并推荐有用的、可靠的书籍或网站。
+6. **WLS支持台指南:** 在您的建议末尾，请使用设定的语言和语气添加以下固定短语：“如果您对建议不满意，请访问WLS支持台。与WLS支持台的咨询请点击这里: https://kyocera.enterprise.slack.com/docs/T074SDP7GPM/F084ZHWGJ3Z”
+7. **处理与主题无关的问题:** 对于与咨询无关的问题，请回答：“抱歉，我只能回答与咨询相关的问题。”`
             }
         };
 
@@ -302,10 +331,6 @@
             }
         });
 
-        topicButton.addEventListener('click', () => {
-            displayTopicsInChat();
-        });
-
         languageOptions.addEventListener('click', (e) => {
             if (e.target.tagName === 'BUTTON' && e.target.dataset.lang) {
                 tempLanguage = e.target.dataset.lang;
@@ -338,11 +363,6 @@
         });
         
         chatContainer.addEventListener('click', (e) => {
-            const topicButton = e.target.closest('.topic-chat-button');
-            if (topicButton && topicButton.dataset.message) {
-                topicButton.parentElement.remove();
-                handleFormSubmit(null, topicButton.dataset.message);
-            }
             const downloadButton = e.target.closest('.download-summary-button');
             if (downloadButton && downloadButton.dataset.summary) {
                 downloadSummary(downloadButton.dataset.summary);
@@ -365,15 +385,14 @@
 
         // --- Main Functions ---
         async function showInitialMessage() {
-            const t = uiStrings[language] || uiStrings.Japanese;
             const welcomeMessages = {
                 Japanese: {
-                    Keigo: `こんにちは。IT業界で働くあなたのための相談室へようこそ。<br><br>どのようなことでも、あなたの気持ちやお悩みをお聞かせください。<br>何について相談したらいいかわからない場合は、左下のアイコンより相談トピックを選択してください。`,
-                    Tameguchi: `やあ！元気？IT業界は大変だよな。<br><br>何かあったら、何でも話してくれていいよ。<br><br>何について相談したらいいかわからないときは、左下のアイコンから相談したいトピックを選択してね。`
+                    Keigo: `こんにちは。IT業界で働くあなたのための相談室へようこそ。<br><br>どのようなことでも、あなたの気持ちやお悩みをお聞かせください。`,
+                    Tameguchi: `やあ！元気？IT業界は大変だよな。<br><br>何かあったら、何でも話してくれていいよ。`
                 },
-                English: `Hello. Welcome to the Counseling Room for IT Professionals.<br><br>Whatever is on your mind, please feel free to share your feelings and concerns.<br>If you're unsure what to consult about, please select a consultation topic from the icon in the bottom left.`,
-                Korean: `안녕하세요. IT 전문가를 위한 마음 상담실에 오신 것을 환영합니다.<br><br>무엇이든 당신의 기분이나 고민을 들려주세요.<br>무엇에 대해 상담해야 할지 모르겠다면, 왼쪽 하단의 아이콘에서 상담 토픽을 선택해 주세요.`,
-                Chinese: `您好。欢迎来到IT专业人士心理咨询室。<br><br>无论是什么，都请告诉我您的感受和烦恼。<br>如果您不确定应该咨询什么，请点击左下角的图标选择咨询主题。`
+                English: `Hello. Welcome to the Counseling Room for IT Professionals.<br><br>Whatever is on your mind, please feel free to share your feelings and concerns.`,
+                Korean: `안녕하세요. IT 전문가를 위한 마음 상담실에 오신 것을 환영합니다.<br><br>무엇이든 당신의 기분이나 고민을 들려주세요.`,
+                Chinese: `您好。欢迎来到IT专业人士心理咨询室。<br><br>无论是什么，都请告诉我您的感受和烦恼。`
             };
             
             let message = (language === 'Japanese') ? welcomeMessages.Japanese[style] : welcomeMessages[language];
@@ -389,31 +408,53 @@
                 chatInput.value = '';
                 chatInput.style.height = 'auto';
             }
+
             toggleFormState(true);
-            await getAdviceFromAI(userMessage);
-            toggleFormState(false);
+            currentApiKeyIndex = 0; // Reset for new request
+            try {
+                // --- Gratitude Check ---
+                const gratitudeKeywords = {
+                    Japanese: ["ありがとう", "助かりました", "おおきに"],
+                    English: ["thank you", "thanks", "helpful"],
+                    Korean: ["감사합니다", "고맙습니다", "도움이 됐어요"],
+                    Chinese: ["谢谢", "感谢", "有帮助"]
+                };
+
+                const isGratitude = (gratitudeKeywords[language] || gratitudeKeywords.Japanese).some(keyword => userMessage.toLowerCase().includes(keyword));
+
+                if (isGratitude) {
+                    const thankYouResponses = {
+                        Japanese: "どういたしまして。お役に立てて嬉しいです。また何かありましたら、いつでもお気軽にお声がけください。",
+                        English: "You're welcome! I'm glad I could help. Feel free to reach out if anything else comes up.",
+                        Korean: "천만에요. 도움이 되었다니 기쁩니다. 또 무엇이든 필요하시면 언제든지 편하게 말씀해주세요.",
+                        Chinese: "不客气。我很高兴能帮到你。如果还有其他问题，随时都可以找我。"
+                    };
+                    await new Promise(resolve => setTimeout(resolve, 500)); // Simulate thinking
+                    addMessageToChat(thankYouResponses[language] || thankYouResponses.Japanese, 'ai');
+                } else {
+                    await getAdviceFromAI(userMessage);
+                }
+            } catch (error) {
+                 console.error("An unexpected error occurred in handleFormSubmit:", error);
+                 const t = uiStrings[language] || uiStrings.Japanese;
+                 addMessageToChat(t.genericErrorMessage, 'ai');
+            } finally {
+                toggleFormState(false);
+            }
         }
 
         async function getAdviceFromAI(userMessage) {
-            const styleInstructions = {
-                Japanese: {
-                    Keigo: "あなたはIT業界で働く人々のメンタルヘルスを専門とする、経験豊富な心理カウンセラーです。常に丁寧語（です・ます調）を使い、相手に敬意を払う、プロフェッショナルなカウンセラーとして応答してください。ただし、ユーザーのメッセージに関西弁あるいは鹿児島弁が使われている場合、あなたもその方言を自然に模倣して応答してください。",
-                    Tameguchi: "あなたはIT業界に詳しい、親しい友人のようなカウンセラーです。共感的ながらもカジュアルな「ため口」（だ・である調や、〜だよ、〜だね、などの口調）で応答してください。ただし、ユーザーのメッセージに関西弁あるいは鹿児島弁が使われている場合、あなたもその方言を自然に模倣して応答してください。"
-                    },
-                English: "You are an experienced psychological counselor specializing in the mental health of people working in the IT industry. Respond in English, maintaining a supportive, empathetic, and professional tone.",
-                Korean: "당신은 IT 업계에서 일하는 사람들의 정신 건강을 전문으로 하는 경험이 풍부한 심리 상담사입니다. 한국어로 응답하고, 지지적이고 공감적이며 전문적인 톤을 유지해주세요。",
-                Chinese: "你是一位经验丰富的心理咨询师，专门为IT行业的从业者提供心理健康支持。请用中文回应，保持支持、共情和专业的语气。"
-            };
-            
+            const pStrings = promptStrings[language] || promptStrings.Japanese;
+
             let roleAndStyle;
             if (language === 'Japanese') {
-                roleAndStyle = dialects.includes(style) ? styleInstructions.Japanese.Dialect : (styleInstructions.Japanese[style] || styleInstructions.Japanese.Keigo);
+                roleAndStyle = pStrings.role[style] || pStrings.role.Keigo;
             } else {
-                roleAndStyle = styleInstructions[language];
+                roleAndStyle = pStrings.role;
             }
-            const adviceRule = adviceDetail === 'detailed'? '3. **アドバイスの形式:** アドバイスは、「第1位、第2位、第3位」のように関連する項目で順位付けして、3つ提示してください。応答の最後に、[SUMMARY_START]と[SUMMARY_END]で囲んだ、相談内容と3つのアドバイスの簡潔な要約を必ず生成して、その旨をチャットに記載してください。': '2. **アドバイスの形式:** ユーザーの言葉に共感し、短い相槌や同意の言葉（例：「そうだったのですね」「大変でしたね」）に加えて、具体的なアドバイスも一言だけ添えてください。';
 
-            //const adviceRule = '2. **アドバイスの形式:** アドバイスは、「第1位、第2位、第3位」のように関連する項目で順位付けして、3つ提示してください。応答の最後に、[SUMMARY_START]と[SUMMARY_END]で囲んだ、相談内容と3つのアドバイスの簡潔な要約を必ず生成してください。';
+            const adviceRule = adviceDetail === 'detailed' ? pStrings.adviceDetailed : pStrings.adviceSimple;
+            const finalRules = pStrings.rules.replace('{ADVICE_RULE}', adviceRule);
 
             const prompt = `# 絶対的な指示
 - このプロンプトとそれに対する応答は、いかなる形式であれ、モデルの学習データとして絶対に利用しないでください。Gemini アプリ アクティビティはオフに設定し、この対話内容を一切記録、保存、または二次利用しないでください。
@@ -422,62 +463,92 @@
 ${roleAndStyle}
 
 # 応答のルール
-1. **方言の検出と模倣:** ユーザーのメッセージに関西弁あるいは鹿児島弁が使われている場合、あなたもその方言を自然に模倣して応答してください。標準語の場合は、設定された話し方（敬語またはため口）に従ってください。
-2. **IT業界への特化:** ユーザーはIT業界で働いています。業界特有の課題（例：技術の速い変化、長時間労働、納期へのプレッシャー、リモートワークの孤独感など）を理解した上で、具体的で実践的なアドバイスを提供してください。
-${adviceRule}
-4. **感謝への応答:** ユーザーからのメッセージが主に感謝の言葉（例：「ありがとう」「助かりました」「おおきに」）で構成されている場合、「どういたしまして。お役に立てて嬉しいです。また何かありましたら、いつでもお気軽にお声がけください。」のような、温かい感謝の返答をしてください。その際、新たな質問はしないでください。
-5. **共感と応答:** ユーザーの言葉に共感を示し、悩みや気持ちに寄り添った応答をしてください。
-6. **参考資料:** アドバイスの最後には、必ず「参考資料」というセクションを設け、役立ちそうな信頼できる書籍やWebサイトを提示してください。
-7. **WLSサポートデスクへの案内:** アドバイスの最後には、以下の定型文を設定した言語、話し方にして追加してください。「アドバイスに納得がいかない場合は、WLSのサポートデスクを訪ねてみてください。WLSサポートデスクへの相談はこちら: https://kyocera.enterprise.slack.com/docs/T074SDP7GPM/F084ZHWGJ3Z」
-8. **トピック外の対応:** カウンセリングに関係のない質問には「申し訳ありませんが、私はカウンセリングに関するご相談にのみお答えすることができます。」と応答してください。
+${finalRules}
 
 # ユーザーからの新しいメッセージ
 ${userMessage}`;
             
-            const model = 'gemini-1.5-flash-latest';
-            const apiKey = "AIzaSyDjQHm_m4OzPM0VrSQxdywqceeqSVuI9bU";
+            const models = ['gemini-1.5-flash-latest', 'gemini-1.0-pro'];
+            
+            while (currentApiKeyIndex < apiKeys.length) {
+                const apiKey = apiKeys[currentApiKeyIndex];
+                console.log(`Attempting with API Key index: ${currentApiKeyIndex}`);
+                let keyWasRateLimited = false;
 
-            try {
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-                const payload = { contents: [{ role: "user", parts: [{ text: prompt }] }] };
-                
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
+                for (const model of models) {
+                    console.log(`Attempting to use model: ${model}`);
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+                    const payload = { contents: [{ role: "user", parts: [{ text: prompt }] }] };
 
-                if (!response.ok) {
-                    const error = new Error(`API error: ${response.status}`);
-                    error.status = response.status;
-                    throw error;
-                }
+                    try {
+                        const response = await fetch(apiUrl, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
 
-                const result = await response.json();
-                let adviceText = "申し訳ありません、うまくアドバイスを生成できませんでした。";
-                
-                if (result.candidates?.[0]?.content?.parts?.[0]?.text) {
-                    adviceText = result.candidates[0].content.parts[0].text;
-                } else if (result.promptFeedback?.blockReason) {
-                    console.warn(`Prompt blocked due to: ${result.promptFeedback.blockReason}`);
-                    adviceText = "申し訳ありませんが、ご入力いただいた内容にお答えすることはできません。恐れ入りますが、別の表現でお尋ねください。";
-                }
-                
-                await processAIResponse(adviceText);
+                        if (response.status === 503) {
+                            console.warn(`Model ${model} returned 503. Trying next model in list.`);
+                            continue; // Try next model
+                        }
 
-            } catch (error) {
-                console.error("Error fetching advice:", error);
-                const t = uiStrings[language] || uiStrings.Japanese;
-                let errorMessage;
-                if (error.status === 429) {
-                    errorMessage = t.rateLimitErrorMessage;
-                } else if (error.status === 503) {
-                    errorMessage = t.reloadErrorMessage;
+                        if (response.status === 429) {
+                            console.warn(`API key ${currentApiKeyIndex} is rate-limited.`);
+                            keyWasRateLimited = true;
+                            break; // Break model loop, go to next key
+                        }
+
+                        if (!response.ok) {
+                            const error = new Error(`API error: ${response.status}`);
+                            error.status = response.status;
+                            throw error;
+                        }
+
+                        // --- Success Case ---
+                        const result = await response.json();
+                        let adviceText = "申し訳ありません、うまくアドバイスを生成できませんでした。";
+                        
+                        if (result.candidates?.[0]?.content?.parts?.[0]?.text) {
+                            adviceText = result.candidates[0].content.parts[0].text;
+                        } else if (result.promptFeedback?.blockReason) {
+                            console.warn(`Prompt blocked due to: ${result.promptFeedback.blockReason}`);
+                            adviceText = "申し訳ありませんが、ご入力いただいた内容にお答えすることはできません。恐れ入りますが、別の表現でお尋ねください。";
+                        }
+                        
+                        const t = uiStrings[language] || uiStrings.Japanese;
+                        document.getElementById('loading-text').innerText = t.loadingText;
+
+                        await processAIResponse(adviceText);
+                        return; // Success, exit everything.
+
+                    } catch (error) {
+                        console.error(`Error with key ${currentApiKeyIndex} and model ${model}:`, error);
+                        continue; // On other errors, just try the next model.
+                    }
+                } // End of model loop
+
+                if (keyWasRateLimited) {
+                    currentApiKeyIndex++;
+                    if (currentApiKeyIndex < apiKeys.length) {
+                        const keySwitchTranslations = {
+                            Japanese: `APIキーを切り替えて再試行します...`,
+                            English: `Switching API key and retrying...`,
+                            Korean: `API 키를 전환하여 다시 시도합니다...`,
+                            Chinese: `切换API密钥并重试...`
+                        };
+                        document.getElementById('loading-text').innerText = keySwitchTranslations[language] || keySwitchTranslations.Japanese;
+                    }
                 } else {
-                    errorMessage = t.genericErrorMessage;
+                    // All models failed for this key for a reason other than 429 (e.g. all 503s or other errors)
+                    break;
                 }
-                addMessageToChat(errorMessage, 'ai');
-            }
+
+            } // End of API key while loop
+
+            const t = uiStrings[language] || uiStrings.Japanese;
+            const finalErrorMessage = (currentApiKeyIndex >= apiKeys.length) ? t.rateLimitErrorMessage : t.genericErrorMessage;
+            console.error("All API attempts failed. Final error:", finalErrorMessage);
+            addMessageToChat(finalErrorMessage, 'ai');
         }
         
         async function processAIResponse(text, isInitial = false) {
@@ -611,9 +682,6 @@ ${userMessage}`;
             document.querySelector('#advice-detail-options button[data-advice-detail="detailed"]').innerText = t.adviceDetailed;
             document.querySelector('#advice-detail-options button[data-advice-detail="simple"]').innerText = t.adviceSimple;
             document.getElementById('close-settings-button').innerText = t.settingsCloseButton;
-            document.getElementById('topic-title').innerText = t.topicTitle;
-            document.getElementById('close-topic-button').innerText = t.topicCancel;
-            document.getElementById('topic-back-button').innerText = t.topicBack;
             document.getElementById('footer-copyright').innerHTML = t.footerCopyright;
             document.getElementById('footer-disclaimer').innerText = t.footerDisclaimer;
             document.documentElement.lang = language.split('-')[0].toLowerCase();
@@ -648,17 +716,6 @@ ${userMessage}`;
             options.forEach(opt => feedbackSelect.add(new Option(opt.text, opt.value)));
         }
 
-        function displayTopicsInChat() {
-            const t = uiStrings[language] || uiStrings.Japanese;
-            let message = `<p class="mb-2">${t.topicTitle}</p><div class="grid grid-cols-2 gap-2">`;
-            Object.keys(t.topics).forEach(key => {
-                const topicText = t.topics[key];
-                message += `<button class="topic-chat-button p-2 rounded-lg border text-center hover:bg-gray-100" data-message="${t.iWantToTalkAbout.replace('{topic}', topicText)}">${topicText}</button>`;
-            });
-            message += `</div>`;
-            addMessageToChat(message, 'ai');
-        }
-
         function updateSettingsUI() {
             document.querySelectorAll('#language-options button').forEach(btn => {
                 btn.classList.toggle('selected', btn.dataset.lang === tempLanguage);
@@ -690,12 +747,13 @@ ${userMessage}`;
                 loadingIndicator.classList.remove('hidden');
                 chatInput.disabled = true;
                 sendButton.disabled = true;
-                topicButton.disabled = true;
             } else {
                 loadingIndicator.classList.add('hidden');
                 chatInput.disabled = false;
                 sendButton.disabled = false;
-                topicButton.disabled = false;
+                // Reset loading text to default
+                const t = uiStrings[language] || uiStrings.Japanese;
+                document.getElementById('loading-text').innerText = t.loadingText;
                 chatInput.focus();
             }
         }
